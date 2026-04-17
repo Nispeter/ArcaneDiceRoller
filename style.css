@@ -218,6 +218,83 @@ button:disabled { opacity: 0.38; cursor: not-allowed; }
 }
 .dice-controls input[type="number"] { width: 5rem; text-align: center; }
 
+.adv-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.adv-slider-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 72px;
+  gap: 2px;
+}
+.adv-ticks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 7px;
+}
+.adv-ticks span {
+  display: block;
+  width: 1px;
+  height: 4px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 1px;
+}
+.adv-end {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.adv-slider-wrap[data-mode="dis"]    .adv-end:first-child { color: #f97316; }
+.adv-slider-wrap[data-mode="adv"]    .adv-end:last-child  { color: var(--cyan-light); }
+
+#advSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  background: linear-gradient(to right, rgba(212,68,0,0.35), rgba(124,58,237,0.6) 50%, rgba(34,211,238,0.35));
+}
+#advSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #c4b5fd;
+  background: var(--purple);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+#advSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #c4b5fd;
+  background: var(--purple);
+  cursor: pointer;
+}
+.adv-slider-wrap[data-mode="dis"] #advSlider::-webkit-slider-thumb {
+  background: #d44400; border-color: #f97316;
+  box-shadow: 0 0 6px rgba(212,68,0,0.6);
+}
+.adv-slider-wrap[data-mode="adv"] #advSlider::-webkit-slider-thumb {
+  background: var(--cyan); border-color: var(--cyan-light);
+  box-shadow: 0 0 6px rgba(34,211,238,0.6);
+}
+.adv-slider-wrap[data-mode="dis"] #advSlider::-moz-range-thumb {
+  background: #d44400; border-color: #f97316;
+}
+.adv-slider-wrap[data-mode="adv"] #advSlider::-moz-range-thumb {
+  background: var(--cyan); border-color: var(--cyan-light);
+}
+
 .dice-result {
   text-align: center;
   font-family: 'Share Tech Mono', monospace;

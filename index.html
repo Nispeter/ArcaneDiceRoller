@@ -37,6 +37,14 @@
       <div class="dice-controls">
         <label for="diceCount">Number of dice</label>
         <input type="number" id="diceCount" value="1" min="1" max="9999" />
+        <div class="adv-slider-wrap" data-mode="normal">
+          <span class="adv-end">Dis ↓</span>
+          <div class="adv-slider-col">
+            <input type="range" id="advSlider" min="0" max="2" step="1" value="1" />
+            <div class="adv-ticks"><span></span><span></span><span></span></div>
+          </div>
+          <span class="adv-end">Adv ↑</span>
+        </div>
       </div>
 
       <div id="diceResult" class="dice-result">
@@ -76,9 +84,10 @@
         <span data-cmd="/r 2d6+3">/r 2d6+3</span>
         <span data-cmd="/r 4d4-2">/r 4d4-2</span>
         <span data-cmd="/add  1">/add</span>
+        <span data-cmd="/ra 1d20">/ra</span>
+        <span data-cmd="/rd 1d20">/rd</span>
         <span data-cmd="/spin">/spin</span>
         <span data-cmd="/surge">/surge</span>
-        <span data-cmd="/boon">/boon</span>
         <span data-cmd="/spell">/spell</span>
         <span data-cmd="/wlist">/wlist</span>
         <span data-cmd="/help">/help</span>

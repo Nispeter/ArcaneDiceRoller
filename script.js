@@ -22,17 +22,38 @@
    DICE PANEL
 ════════════════════════════════════════════ */
 const diceLog = [];
+let rollMode = 'normal';
+
+const advSlider = document.getElementById('advSlider');
+const advWrap   = advSlider.closest('.adv-slider-wrap');
+advSlider.addEventListener('input', () => {
+  const v = +advSlider.value;
+  rollMode = v === 0 ? 'dis' : v === 2 ? 'adv' : 'normal';
+  advWrap.dataset.mode = rollMode;
+});
 
 function rollDice(count, sides) {
   return Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1);
 }
 
-function showDiceResult(sides, rolls, modifier) {
-  const sum = rolls.reduce((a, b) => a + b, 0) + modifier;
-  const resultEl = document.getElementById('diceResult');
+function showDiceResult(sides, rolls, modifier, mode, otherRolls) {
+  mode = mode || 'normal';
+  const sum       = rolls.reduce((a, b) => a + b, 0) + modifier;
+  const resultEl  = document.getElementById('diceResult');
+  const modeGlyph = mode === 'adv' ? ' ↑' : mode === 'dis' ? ' ↓' : '';
+  const label     = `${rolls.length}d${sides}${modifier > 0 ? '+'+modifier : modifier < 0 ? modifier : ''}${modeGlyph}`;
 
-  const label = `${rolls.length}d${sides}${modifier > 0 ? '+'+modifier : modifier < 0 ? modifier : ''}`;
-  const detail = (rolls.length > 1 && rolls.length <= DICE_DETAIL_MAX) ? `[${rolls.join(', ')}]${modifier !== 0 ? (modifier > 0 ? ' +'+modifier : ' '+modifier) : ''}` : '';
+  let detail = '';
+  if (mode !== 'normal' && otherRolls) {
+    const otherSum = otherRolls.reduce((a, b) => a + b, 0) + modifier;
+    detail = rolls.length <= DICE_DETAIL_MAX
+      ? `[${rolls.join(', ')}] ✓  vs  [${otherRolls.join(', ')}]`
+      : `${sum} ✓  vs  ${otherSum}`;
+  } else {
+    detail = (rolls.length > 1 && rolls.length <= DICE_DETAIL_MAX)
+      ? `[${rolls.join(', ')}]${modifier !== 0 ? (modifier > 0 ? ' +'+modifier : ' '+modifier) : ''}`
+      : '';
+  }
 
   resultEl.innerHTML = `
     <div class="result-label">${label}</div>
@@ -40,12 +61,31 @@ function showDiceResult(sides, rolls, modifier) {
     ${detail ? `<div class="result-detail">${detail}</div>` : ''}
   `;
 
-  const logText = (rolls.length > DICE_DETAIL_MAX || !detail)
-    ? `<span class="log-die">${label}</span> = <span class="log-total">${sum}</span>`
-    : `<span class="log-die">${label}</span> → ${detail} = <span class="log-total">${sum}</span>`;
+  let logText;
+  if (mode !== 'normal' && otherRolls) {
+    const otherSum = otherRolls.reduce((a, b) => a + b, 0) + modifier;
+    logText = `<span class="log-die">${label}</span> → <span class="log-total">${sum}</span> ✓ vs ${otherSum}`;
+  } else {
+    logText = (rolls.length > DICE_DETAIL_MAX || !detail)
+      ? `<span class="log-die">${label}</span> = <span class="log-total">${sum}</span>`
+      : `<span class="log-die">${label}</span> → ${detail} = <span class="log-total">${sum}</span>`;
+  }
   diceLog.unshift(logText);
   if (diceLog.length > DICE_LOG_MAX) diceLog.pop();
   document.getElementById('diceLog').innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
+}
+
+function rollAndShow(count, sides, modifier, mode) {
+  if (mode === 'normal' || !mode) {
+    showDiceResult(sides, rollDice(count, sides), modifier);
+    return;
+  }
+  const a = rollDice(count, sides), b = rollDice(count, sides);
+  const sa = a.reduce((x, y) => x + y, 0), sb = b.reduce((x, y) => x + y, 0);
+  const [chosen, other] = mode === 'adv'
+    ? (sa >= sb ? [a, b] : [b, a])
+    : (sa <= sb ? [a, b] : [b, a]);
+  showDiceResult(sides, chosen, modifier, mode, other);
 }
 
 document.querySelectorAll('.die-btn').forEach(btn => {
@@ -57,7 +97,7 @@ document.querySelectorAll('.die-btn').forEach(btn => {
     btn.addEventListener('animationend', () => btn.classList.remove('rolling'), { once: true });
     if (btn.dataset.sides === 'coin') { flipCoins(count); return; }
     const sides = parseInt(btn.dataset.sides);
-    showDiceResult(sides, rollDice(count, sides), 0);
+    rollAndShow(count, sides, 0, rollMode);
   });
 });
 
@@ -187,7 +227,7 @@ function termPrint(text, cls = 'info') {
   termOutput.scrollTop = termOutput.scrollHeight;
 }
 
-const ROLL_RE = /^\/r(?:oll)?\s+(\d{1,4})d(\d{1,5}|c)([+-]\d{1,6})?$/i;
+const ROLL_RE = /^\/r(?:oll)?([ad])?\s+(\d{1,4})d(\d{1,5}|c)([+-]\d{1,6})?$/i;
 
 function handleTermCommand(raw) {
   const cmd = raw.trim();
@@ -205,13 +245,14 @@ function handleTermCommand(raw) {
       '── Dice Commands ─────────────────',
       '/r &lt;NdX&gt;        Roll N dice (X sides)',
       '/r &lt;NdX+M&gt;      Roll with modifier',
+      '/ra &lt;NdX&gt;       Roll with advantage (take higher)',
+      '/rd &lt;NdX&gt;       Roll with disadvantage (take lower)',
       '/r &lt;Ndc&gt;        Flip N coins (visual for ≤2)',
-      '/roll            Alias for /r',
+      '/roll /rolla /rolld  Long-form aliases',
       '── Wild Magic ────────────────────',
       '/surge           Roll on the Wild Magic Surge table',
       '/wmt             Alias for /surge',
       '── Buff Generator ────────────────',
-      '/boon            Generate a procedural buff+debuff',
       '/spell           Draw a random spell from 10 000 effects',
 
       '── Wheel Commands ────────────────',
@@ -228,24 +269,45 @@ function handleTermCommand(raw) {
 
   const m = cmd.match(ROLL_RE);
   if (m) {
-    const count = Math.min(9999, Math.max(1, parseInt(m[1])));
+    const modeChar   = m[1] ? m[1].toLowerCase() : null;
+    const mode       = modeChar === 'a' ? 'adv' : modeChar === 'd' ? 'dis' : 'normal';
+    const count      = Math.min(DICE_MAX, Math.max(1, parseInt(m[2])));
 
-    if (m[2].toLowerCase() === 'c') {
+    if (m[3].toLowerCase() === 'c') {
       termPrint(`🪙 Flipping ${count} coin${count > 1 ? 's' : ''}…`, 'info');
       flipCoins(count);
       return;
     }
 
-    const sides = Math.min(1000, Math.max(2, parseInt(m[2])));
-    const mod   = m[3] ? parseInt(m[3]) : 0;
+    const sides      = Math.min(1000, Math.max(2, parseInt(m[3])));
+    const mod        = m[4] ? parseInt(m[4]) : 0;
+    const modStr     = mod > 0 ? ` + ${mod}` : mod < 0 ? ` - ${Math.abs(mod)}` : '';
+    const modeLabel  = mode === 'adv' ? ' with advantage' : mode === 'dis' ? ' with disadvantage' : '';
 
-    const rolls = rollDice(count, sides);
-    const sum   = rolls.reduce((a, b) => a + b, 0) + mod;
-    const modStr = mod > 0 ? ` + ${mod}` : mod < 0 ? ` - ${Math.abs(mod)}` : '';
+    termPrint(`🎲 Rolling ${count}d${sides}${mod !== 0 ? (mod > 0 ? '+'+mod : mod) : ''}${modeLabel}…`, 'info');
 
-    termPrint(`🎲 Rolling ${count}d${sides}${mod !== 0 ? (mod > 0 ? '+'+mod : mod) : ''}…`, 'info');
-    if (count <= DICE_DETAIL_MAX) termPrint(`[ ${rolls.join(' | ')} ]${modStr}`, 'rolls');
-    termPrint(`Total: <strong>${sum}</strong>`, 'result');
+    if (mode === 'normal') {
+      const rolls = rollDice(count, sides);
+      const sum   = rolls.reduce((a, b) => a + b, 0) + mod;
+      showDiceResult(sides, rolls, mod);
+      if (count <= DICE_DETAIL_MAX) termPrint(`[ ${rolls.join(' | ')} ]${modStr}`, 'rolls');
+      termPrint(`Total: <strong>${sum}</strong>`, 'result');
+    } else {
+      const a = rollDice(count, sides), b = rollDice(count, sides);
+      const sa = a.reduce((x, y) => x + y, 0), sb = b.reduce((x, y) => x + y, 0);
+      const [chosen, other] = mode === 'adv'
+        ? (sa >= sb ? [a, b] : [b, a])
+        : (sa <= sb ? [a, b] : [b, a]);
+      const cs = chosen.reduce((x, y) => x + y, 0), os = other.reduce((x, y) => x + y, 0);
+      showDiceResult(sides, chosen, mod, mode, other);
+      if (count <= DICE_DETAIL_MAX) {
+        termPrint(`Roll A: [ ${chosen.join(' | ')} ] = ${cs + mod} ✓`, 'rolls');
+        termPrint(`Roll B: [ ${other.join(' | ')} ] = ${os + mod}`, 'rolls');
+      } else {
+        termPrint(`Roll A: ${cs + mod} ✓  Roll B: ${os + mod}`, 'rolls');
+      }
+      termPrint(`Total: <strong>${cs + mod}</strong>`, 'result');
+    }
     return;
   }
 
@@ -314,14 +376,6 @@ function handleTermCommand(raw) {
     const hi   = lo + 1;
     termPrint(`🎲 Wild Magic Surge — roll: <strong>${String(roll).padStart(2,'0')}</strong> (${String(lo).padStart(2,'0')}–${String(hi).padStart(2,'0')})`, 'info');
     termPrint(escHtml(WILD_MAGIC[idx]), 'result');
-    return;
-  }
-
-  // /boon — Procedural Buff Generator  |  /spell — Random spell from 10k list
-  if (/^\/boon$/i.test(cmd)) {
-    const txt = `You ${randFrom(BUFFS)} ${randFrom(CONNECTORS)} ${randFrom(DEBUFFS)}.`;
-    termPrint('✦ Arcane Boon:', 'info');
-    termPrint(escHtml(txt), 'winner');
     return;
   }
 
