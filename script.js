@@ -3,7 +3,7 @@
 ════════════════════════════════════════════ */
 (function spawnStars() {
   const container = document.querySelector('.stars');
-  for (let i = 0; i < 120; i++) {
+  for (let i = 0; i < STAR_COUNT; i++) {
     const s = document.createElement('div');
     s.className = 'star';
     const size = Math.random() * 2.2 + 0.6;
@@ -32,7 +32,7 @@ function showDiceResult(sides, rolls, modifier) {
   const resultEl = document.getElementById('diceResult');
 
   const label = `${rolls.length}d${sides}${modifier > 0 ? '+'+modifier : modifier < 0 ? modifier : ''}`;
-  const detail = (rolls.length > 1 && rolls.length <= 20) ? `[${rolls.join(', ')}]${modifier !== 0 ? (modifier > 0 ? ' +'+modifier : ' '+modifier) : ''}` : '';
+  const detail = (rolls.length > 1 && rolls.length <= DICE_DETAIL_MAX) ? `[${rolls.join(', ')}]${modifier !== 0 ? (modifier > 0 ? ' +'+modifier : ' '+modifier) : ''}` : '';
 
   resultEl.innerHTML = `
     <div class="result-label">${label}</div>
@@ -40,17 +40,17 @@ function showDiceResult(sides, rolls, modifier) {
     ${detail ? `<div class="result-detail">${detail}</div>` : ''}
   `;
 
-  const logText = (rolls.length > 20 || !detail)
+  const logText = (rolls.length > DICE_DETAIL_MAX || !detail)
     ? `<span class="log-die">${label}</span> = <span class="log-total">${sum}</span>`
     : `<span class="log-die">${label}</span> → ${detail} = <span class="log-total">${sum}</span>`;
   diceLog.unshift(logText);
-  if (diceLog.length > 20) diceLog.pop();
+  if (diceLog.length > DICE_LOG_MAX) diceLog.pop();
   document.getElementById('diceLog').innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
 }
 
 document.querySelectorAll('.die-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const count = Math.max(1, Math.min(9999, parseInt(document.getElementById('diceCount').value) || 1));
+    const count = Math.max(1, Math.min(DICE_MAX, parseInt(document.getElementById('diceCount').value) || 1));
     btn.classList.remove('rolling');
     void btn.offsetWidth;
     btn.classList.add('rolling');
@@ -79,7 +79,7 @@ function createCoin(showDux) {
       <span class="coin-name">Dux</span>
     </div>`;
   wrap.appendChild(coin);
-  const spins    = (6 + Math.floor(Math.random() * 5)) * 360;
+  const spins    = (COIN_SPINS_MIN + Math.floor(Math.random() * COIN_SPINS_RANGE)) * 360;
   const finalDeg = spins + (showDux ? 180 : 0);
   requestAnimationFrame(() => requestAnimationFrame(() => {
     coin.style.transform = `rotateY(${finalDeg}deg)`;
@@ -119,11 +119,11 @@ function flipCoins(count) {
       termPrint(results.map(r => r === 'dux' ? '⚔ Dux' : '✦ Elskan').join('  ·  '), 'rolls');
     }
     diceLog.unshift(logText);
-    if (diceLog.length > 20) diceLog.pop();
+    if (diceLog.length > DICE_LOG_MAX) diceLog.pop();
     document.getElementById('diceLog').innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
   }
 
-  if (count <= 2) {
+  if (count <= COIN_ANIM_MAX) {
     const row = document.createElement('div');
     row.className = 'coins-row';
 
@@ -212,6 +212,7 @@ function handleTermCommand(raw) {
       '/wmt             Alias for /surge',
       '── Buff Generator ────────────────',
       '/boon            Generate a procedural buff+debuff',
+      '/spell           Draw a random spell from 10 000 effects',
 
       '── Wheel Commands ────────────────',
       '/add &lt;name&gt; [w]  Add item to wheel (w = weight)',
@@ -243,7 +244,7 @@ function handleTermCommand(raw) {
     const modStr = mod > 0 ? ` + ${mod}` : mod < 0 ? ` - ${Math.abs(mod)}` : '';
 
     termPrint(`🎲 Rolling ${count}d${sides}${mod !== 0 ? (mod > 0 ? '+'+mod : mod) : ''}…`, 'info');
-    if (count <= 20) termPrint(`[ ${rolls.join(' | ')} ]${modStr}`, 'rolls');
+    if (count <= DICE_DETAIL_MAX) termPrint(`[ ${rolls.join(' | ')} ]${modStr}`, 'rolls');
     termPrint(`Total: <strong>${sum}</strong>`, 'result');
     return;
   }
@@ -253,8 +254,8 @@ function handleTermCommand(raw) {
   if (addM) {
     const label  = addM[1].trim().slice(0, 24);
     const weight = addM[2] ? Math.max(0.1, Math.min(100, parseFloat(addM[2]))) : 1;
-    if (wheelItems.length >= 40) {
-      termPrint('✗ Wheel is full (40 items max).', 'error');
+    if (wheelItems.length >= WHEEL_MAX_ITEMS) {
+      termPrint(`✗ Wheel is full (${WHEEL_MAX_ITEMS} items max).`, 'error');
       return;
     }
     wheelItems.push({ label, weight: +weight.toFixed(1) });
@@ -316,7 +317,7 @@ function handleTermCommand(raw) {
     return;
   }
 
-  // /boon — Procedural Buff Generator
+  // /boon — Procedural Buff Generator  |  /spell — Random spell from 10k list
   if (/^\/boon$/i.test(cmd)) {
     const txt = `You ${randFrom(BUFFS)} ${randFrom(CONNECTORS)} ${randFrom(DEBUFFS)}.`;
     termPrint('✦ Arcane Boon:', 'info');
@@ -324,8 +325,14 @@ function handleTermCommand(raw) {
     return;
   }
 
+  if (/^\/spell$/i.test(cmd)) {
+    termPrint(escHtml(randFrom(SPELLS)), 'winner');
+    return;
+  }
+
   termPrint(`✗ Unknown incantation: "${escHtml(cmd)}" — try /help`, 'error');
 }
+
 
 function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -338,7 +345,7 @@ function submitTerm() {
   const raw = termInput.value;
   if (raw.trim()) {
     termHistory.unshift(raw);
-    if (termHistory.length > 50) termHistory.pop();
+    if (termHistory.length > TERM_HISTORY_MAX) termHistory.pop();
   }
   termHistIdx = -1;
   handleTermCommand(raw);
@@ -448,13 +455,13 @@ function drawWheel() {
       ctx.font = `bold ${Math.max(10, Math.min(14, RADIUS * 0.09))}px Cinzel, serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      const label = item.label.length > 11 ? item.label.slice(0, 10) + '…' : item.label;
+      const label = item.label.length > WHEEL_LABEL_MAX ? item.label.slice(0, WHEEL_LABEL_MAX - 1) + '…' : item.label;
       ctx.fillText(label, 0, 0);
       ctx.restore();
     }
 
     // Weight badge (small arc near rim)
-    if (arc > 0.3 && wheelItems.length <= 12) {
+    if (arc > 0.3 && wheelItems.length <= WHEEL_BADGE_MAX) {
       const mid = start + arc / 2;
       const br  = RADIUS * 0.88;
       ctx.fillStyle = 'rgba(0,0,0,0.45)';
@@ -469,8 +476,8 @@ function drawWheel() {
 
   // Center hub
   ctx.beginPath();
-  ctx.arc(CX, CY, 18, 0, Math.PI * 2);
-  const hub = ctx.createRadialGradient(CX, CY, 2, CX, CY, 18);
+  ctx.arc(CX, CY, WHEEL_HUB_RADIUS, 0, Math.PI * 2);
+  const hub = ctx.createRadialGradient(CX, CY, 2, CX, CY, WHEEL_HUB_RADIUS);
   hub.addColorStop(0, '#22d3ee');
   hub.addColorStop(1, '#08001a');
   ctx.fillStyle = hub;
@@ -510,18 +517,18 @@ function spinWheel(onDone) {
   }
   const sliceAngle = (wheelItems[winnerIdx].weight / total) * Math.PI * 2;
   // Random landing point inside the slice (avoid 10% edges)
-  const offset = sliceAngle * 0.1 + Math.random() * sliceAngle * 0.8;
+  const offset = sliceAngle * WHEEL_EDGE_GUARD + Math.random() * sliceAngle * (1 - WHEEL_EDGE_GUARD * 2);
 
   // The pointer sits at -π/2. We need:
   //   wheelAngle_final + cumulAngle + offset = -π/2  (mod 2π)
   const targetBase = -Math.PI / 2 - cumulAngle - offset;
   let delta = ((targetBase - wheelAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
   if (delta < 0.01) delta = Math.PI * 2;
-  delta += 6 * Math.PI * 2; // 6 full extra spins
+  delta += WHEEL_EXTRA_SPINS * Math.PI * 2;
 
   const finalAngle   = wheelAngle + delta;
   const startAngle   = wheelAngle;
-  const duration     = 4200;
+  const duration     = WHEEL_SPIN_MS;
   const startTime    = performance.now();
 
   function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -583,7 +590,7 @@ document.getElementById('wheelAddBtn').addEventListener('click', () => {
 
   if (!label) { nameInput.focus(); return; }
   if (wheelItems.length >= 40) {
-    alert('Maximum 40 items on the wheel.');
+    alert(`Maximum ${WHEEL_MAX_ITEMS} items on the wheel.`);
     return;
   }
 
