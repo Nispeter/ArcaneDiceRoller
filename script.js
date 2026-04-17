@@ -92,14 +92,23 @@ function handleTermCommand(raw) {
 
   if (/^\/help$/i.test(cmd)) {
     [
-      '── Commands ──────────────────────',
-      '/r &lt;NdX&gt;       Roll N dice with X sides',
-      '/r &lt;NdX+M&gt;     Roll with modifier',
-      '/roll            Alias for /r',
-      '/clear           Clear terminal',
-      '/help            Show this message',
+      '── Dice Commands ─────────────────',
+      '/r &lt;NdX&gt;            Roll N dice (X sides)',
+      '/r &lt;NdX+M&gt;          Roll with modifier',
+      '/roll               Alias for /r',
+      '── Wheel Commands ────────────────',
+      '/add &lt;name&gt; [w]     Add item (w = weight, default 1)',
+      '/spin               Spin the wheel',
+      '/wlist              List wheel items',
+      '/wclear             Clear all wheel items',
+      '── Other ─────────────────────────',
+      '/clear              Clear terminal',
+      '/help               Show this message',
       '─ Examples ───────────────────────',
-      '/r 1d20   /r 2d6+3   /r 4d4-2',
+      '/r 2d6+3',
+      '/add Fireball 3',
+      '/add Shield 1',
+      '/spin',
     ].forEach(l => termPrint(l, 'info'));
     return;
   }
@@ -120,6 +129,63 @@ function handleTermCommand(raw) {
     return;
   }
 
+  // /add <name> [weight]
+  const addM = cmd.match(/^\/add\s+(.+?)(?:\s+(\d+(?:\.\d+)?))?$/i);
+  if (addM) {
+    const label  = addM[1].trim().slice(0, 24);
+    const weight = addM[2] ? Math.max(0.1, Math.min(100, parseFloat(addM[2]))) : 1;
+    if (wheelItems.length >= 20) {
+      termPrint('✗ Wheel is full (20 items max).', 'error');
+      return;
+    }
+    wheelItems.push({ label, weight: +weight.toFixed(1) });
+    renderWheelItems();
+    drawWheel();
+    document.getElementById('wheelSpinBtn').disabled = wheelItems.length < 2;
+    document.getElementById('wheelWinner').classList.add('hidden');
+    termPrint(`✦ Added "${escHtml(label)}" (weight ${weight.toFixed(1)}) to the wheel.`, 'result');
+    return;
+  }
+
+  // /spin
+  if (/^\/spin$/i.test(cmd)) {
+    if (wheelItems.length < 2) {
+      termPrint('✗ Need at least 2 items on the wheel. Use /add &lt;name&gt; [weight].', 'error');
+      return;
+    }
+    if (spinning) {
+      termPrint('✗ The wheel is already spinning!', 'error');
+      return;
+    }
+    termPrint('🎡 Spinning the wheel…', 'info');
+    spinWheel(winner => termPrint(`✦ The wheel chose: <strong>${escHtml(winner)}</strong>`, 'winner'));
+    return;
+  }
+
+  // /wlist
+  if (/^\/wlist$/i.test(cmd)) {
+    if (wheelItems.length === 0) {
+      termPrint('Wheel is empty. Use /add &lt;name&gt; [weight].', 'info');
+      return;
+    }
+    termPrint('── Wheel Items ───────────────────', 'info');
+    wheelItems.forEach((item, i) =>
+      termPrint(`  ${i+1}. ${escHtml(item.label)} (weight ${item.weight})`, 'info')
+    );
+    return;
+  }
+
+  // /wclear
+  if (/^\/wclear$/i.test(cmd)) {
+    wheelItems.length = 0;
+    renderWheelItems();
+    drawWheel();
+    document.getElementById('wheelSpinBtn').disabled = true;
+    document.getElementById('wheelWinner').classList.add('hidden');
+    termPrint('✦ Wheel cleared.', 'result');
+    return;
+  }
+
   termPrint(`✗ Unknown incantation: "${escHtml(cmd)}" — try /help`, 'error');
 }
 
@@ -127,12 +193,14 @@ function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-termInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    handleTermCommand(termInput.value);
-    termInput.value = '';
-  }
-});
+function submitTerm() {
+  handleTermCommand(termInput.value);
+  termInput.value = '';
+  termInput.focus();
+}
+
+termInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitTerm(); });
+document.getElementById('termSubmit').addEventListener('click', submitTerm);
 
 document.querySelectorAll('.term-hints span').forEach(hint => {
   hint.addEventListener('click', () => {
@@ -252,7 +320,7 @@ function drawWheel() {
   ctx.stroke();
 }
 
-function spinWheel() {
+function spinWheel(onDone) {
   if (spinning || wheelItems.length < 2) return;
   spinning = true;
 
@@ -301,7 +369,9 @@ function spinWheel() {
       wheelAngle = finalAngle;
       spinning   = false;
       document.getElementById('wheelSpinBtn').disabled = false;
-      showWheelWinner(wheelItems[winnerIdx].label);
+      const winnerLabel = wheelItems[winnerIdx].label;
+      showWheelWinner(winnerLabel);
+      if (onDone) onDone(winnerLabel);
     }
   }
 

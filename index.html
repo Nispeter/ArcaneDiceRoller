@@ -14,7 +14,7 @@
 
   <header>
     <h1 class="site-title">✦ Arcane Dice Roller ✦</h1>
-    <p class="site-subtitle">Roll the Bones of Fate</p>
+    <p class="site-subtitle">Roll the weave of Fate</p>
   </header>
 
   <main class="grid">
@@ -62,15 +62,18 @@
         <input type="text" id="termInput" class="term-input"
                placeholder="/r 1d20"
                autocomplete="off" spellcheck="false" />
+        <button id="termSubmit" class="term-submit" title="Execute">↵</button>
       </div>
 
       <div class="term-hints">
         <span data-cmd="/r 1d20">/r 1d20</span>
         <span data-cmd="/r 2d6+3">/r 2d6+3</span>
         <span data-cmd="/r 4d4-2">/r 4d4-2</span>
-        <span data-cmd="/r 1d100">/r 1d100</span>
+        <span data-cmd="/add  1">/add</span>
+        <span data-cmd="/spin">/spin</span>
+        <span data-cmd="/wlist">/wlist</span>
+        <span data-cmd="/wclear">/wclear</span>
         <span data-cmd="/help">/help</span>
-        <span data-cmd="/clear">/clear</span>
       </div>
     </section>
 
