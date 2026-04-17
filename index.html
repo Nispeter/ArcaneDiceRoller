@@ -30,12 +30,13 @@
         <button class="die-btn" data-sides="10">d10</button>
         <button class="die-btn" data-sides="12">d12</button>
         <button class="die-btn" data-sides="20">d20</button>
-        <button class="die-btn" data-sides="100">d%</button>
+        <button class="die-btn" data-sides="100">d100</button>
+        <button class="die-btn coin-die-btn" data-sides="coin">coin</button>
       </div>
 
       <div class="dice-controls">
         <label for="diceCount">Number of dice</label>
-        <input type="number" id="diceCount" value="1" min="1" max="20" />
+        <input type="number" id="diceCount" value="1" min="1" max="9999" />
       </div>
 
       <div id="diceResult" class="dice-result">
@@ -44,6 +45,7 @@
 
       <div class="log-label">Recent Rolls</div>
       <div id="diceLog" class="scroll-log"></div>
+
     </section>
 
     <!-- ── Command Terminal ── -->
@@ -62,7 +64,11 @@
         <input type="text" id="termInput" class="term-input"
                placeholder="/r 1d20"
                autocomplete="off" spellcheck="false" />
-        <button id="termSubmit" class="term-submit" title="Execute">↵</button>
+        <button id="termSubmit" class="term-submit" title="Execute">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
       </div>
 
       <div class="term-hints">
@@ -71,8 +77,9 @@
         <span data-cmd="/r 4d4-2">/r 4d4-2</span>
         <span data-cmd="/add  1">/add</span>
         <span data-cmd="/spin">/spin</span>
+        <span data-cmd="/surge">/surge</span>
+        <span data-cmd="/boon">/boon</span>
         <span data-cmd="/wlist">/wlist</span>
-        <span data-cmd="/wclear">/wclear</span>
         <span data-cmd="/help">/help</span>
       </div>
     </section>
@@ -102,6 +109,7 @@
 
   </main>
 
+  <script src="data.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

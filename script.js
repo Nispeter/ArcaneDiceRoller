@@ -32,7 +32,7 @@ function showDiceResult(sides, rolls, modifier) {
   const resultEl = document.getElementById('diceResult');
 
   const label = `${rolls.length}d${sides}${modifier > 0 ? '+'+modifier : modifier < 0 ? modifier : ''}`;
-  const detail = rolls.length > 1 ? `[${rolls.join(', ')}]${modifier !== 0 ? (modifier > 0 ? ' +'+modifier : ' '+modifier) : ''}` : '';
+  const detail = (rolls.length > 1 && rolls.length <= 20) ? `[${rolls.join(', ')}]${modifier !== 0 ? (modifier > 0 ? ' +'+modifier : ' '+modifier) : ''}` : '';
 
   resultEl.innerHTML = `
     <div class="result-label">${label}</div>
@@ -40,28 +40,138 @@ function showDiceResult(sides, rolls, modifier) {
     ${detail ? `<div class="result-detail">${detail}</div>` : ''}
   `;
 
-  const logText = detail
-    ? `<span class="log-die">${label}</span> → ${detail} = <span class="log-total">${sum}</span>`
-    : `<span class="log-die">${label}</span> = <span class="log-total">${sum}</span>`;
-
+  const logText = (rolls.length > 20 || !detail)
+    ? `<span class="log-die">${label}</span> = <span class="log-total">${sum}</span>`
+    : `<span class="log-die">${label}</span> → ${detail} = <span class="log-total">${sum}</span>`;
   diceLog.unshift(logText);
   if (diceLog.length > 20) diceLog.pop();
-
-  const logEl = document.getElementById('diceLog');
-  logEl.innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
+  document.getElementById('diceLog').innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
 }
 
 document.querySelectorAll('.die-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const sides = parseInt(btn.dataset.sides);
-    const count = Math.max(1, Math.min(20, parseInt(document.getElementById('diceCount').value) || 1));
+    const count = Math.max(1, Math.min(9999, parseInt(document.getElementById('diceCount').value) || 1));
     btn.classList.remove('rolling');
-    void btn.offsetWidth; // reflow to restart animation
+    void btn.offsetWidth;
     btn.classList.add('rolling');
     btn.addEventListener('animationend', () => btn.classList.remove('rolling'), { once: true });
+    if (btn.dataset.sides === 'coin') { flipCoins(count); return; }
+    const sides = parseInt(btn.dataset.sides);
     showDiceResult(sides, rollDice(count, sides), 0);
   });
 });
+
+/* ════════════════════════════════════════════
+   COIN TOSS
+════════════════════════════════════════════ */
+function createCoin(showDux) {
+  const wrap = document.createElement('div');
+  wrap.className = 'coin-wrap';
+  const coin = document.createElement('div');
+  coin.className = 'coin';
+  coin.innerHTML = `
+    <div class="coin-face coin-front">
+      <span class="coin-symbol coin-good">✦</span>
+      <span class="coin-name">Elskan</span>
+    </div>
+    <div class="coin-face coin-back">
+      <span class="coin-symbol coin-evil">⚔</span>
+      <span class="coin-name">Dux</span>
+    </div>`;
+  wrap.appendChild(coin);
+  const spins    = (6 + Math.floor(Math.random() * 5)) * 360;
+  const finalDeg = spins + (showDux ? 180 : 0);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    coin.style.transform = `rotateY(${finalDeg}deg)`;
+  }));
+  return wrap;
+}
+
+function flipCoins(count) {
+  const results  = Array.from({ length: count }, () => Math.random() < 0.5 ? 'dux' : 'elskan');
+  const resultEl = document.getElementById('diceResult');
+  resultEl.innerHTML = '';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:0.5rem;width:100%';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'result-label';
+  lbl.textContent = `${count}dc`;
+  box.appendChild(lbl);
+
+  const logText = count <= 2
+    ? `<span class="log-die">${count}dc</span> → ${results.map(r =>
+        r === 'dux'
+          ? '<span class="log-dux">⚔ Dux</span>'
+          : '<span class="log-elskan">✦ Elskan</span>'
+      ).join(', ')}`
+    : `<span class="log-die">${count}dc</span> → <span class="log-elskan">${results.filter(r=>r==='elskan').length}✦</span> / <span class="log-dux">${results.filter(r=>r==='dux').length}⚔</span>`;
+
+  function settle(names) {
+    if (names) {
+      names.style.transition = 'opacity 0.35s ease';
+      names.style.opacity = '1';
+    }
+    if (count === 1) {
+      termPrint(results[0] === 'dux' ? '⚔ Dux has spoken' : '✦ Elskan watches over you', 'rolls');
+    } else {
+      termPrint(results.map(r => r === 'dux' ? '⚔ Dux' : '✦ Elskan').join('  ·  '), 'rolls');
+    }
+    diceLog.unshift(logText);
+    if (diceLog.length > 20) diceLog.pop();
+    document.getElementById('diceLog').innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
+  }
+
+  if (count <= 2) {
+    const row = document.createElement('div');
+    row.className = 'coins-row';
+
+    const names = document.createElement('div');
+    names.className = 'coin-names';
+    names.style.opacity = '0';
+    if (count === 1) {
+      const span = document.createElement('span');
+      span.className = results[0] === 'dux' ? 'coin-name-dux' : 'coin-name-elskan';
+      span.textContent = results[0] === 'dux' ? '⚔ Dux has spoken' : '✦ Elskan watches over you';
+      names.appendChild(span);
+    } else {
+      results.forEach(r => {
+        const span = document.createElement('span');
+        span.className = r === 'dux' ? 'coin-name-dux' : 'coin-name-elskan';
+        span.textContent = r === 'dux' ? '⚔ Dux' : '✦ Elskan';
+        names.appendChild(span);
+      });
+    }
+
+    let pending = count;
+    results.forEach(r => {
+      const wrap = createCoin(r === 'dux');
+      wrap.querySelector('.coin').addEventListener('transitionend', () => {
+        if (--pending === 0) settle(names);
+      }, { once: true });
+      row.appendChild(wrap);
+    });
+
+    box.appendChild(row);
+    box.appendChild(names);
+  } else {
+    const elskanN = results.filter(r => r === 'elskan').length;
+    const duxN    = count - elskanN;
+    const tot = document.createElement('div');
+    tot.className = 'result-total';
+    tot.style.fontSize = '1.6rem';
+    tot.innerHTML = `<span class="coin-name-elskan">${elskanN}✦</span> / <span class="coin-name-dux">${duxN}⚔</span>`;
+    box.appendChild(tot);
+    const detail = document.createElement('div');
+    detail.className = 'result-detail';
+    detail.textContent = results.map(r => r === 'dux' ? '⚔' : '✦').join(' ');
+    box.appendChild(detail);
+    settle(null);
+  }
+
+  resultEl.appendChild(box);
+}
 
 /* ════════════════════════════════════════════
    COMMAND TERMINAL
@@ -77,7 +187,7 @@ function termPrint(text, cls = 'info') {
   termOutput.scrollTop = termOutput.scrollHeight;
 }
 
-const ROLL_RE = /^\/r(?:oll)?\s+(\d{1,2})d(\d{1,3})([+-]\d{1,4})?$/i;
+const ROLL_RE = /^\/r(?:oll)?\s+(\d{1,4})d(\d{1,5}|c)([+-]\d{1,6})?$/i;
 
 function handleTermCommand(raw) {
   const cmd = raw.trim();
@@ -93,29 +203,38 @@ function handleTermCommand(raw) {
   if (/^\/help$/i.test(cmd)) {
     [
       '── Dice Commands ─────────────────',
-      '/r &lt;NdX&gt;            Roll N dice (X sides)',
-      '/r &lt;NdX+M&gt;          Roll with modifier',
-      '/roll               Alias for /r',
+      '/r &lt;NdX&gt;        Roll N dice (X sides)',
+      '/r &lt;NdX+M&gt;      Roll with modifier',
+      '/r &lt;Ndc&gt;        Flip N coins (visual for ≤2)',
+      '/roll            Alias for /r',
+      '── Wild Magic ────────────────────',
+      '/surge           Roll on the Wild Magic Surge table',
+      '/wmt             Alias for /surge',
+      '── Buff Generator ────────────────',
+      '/boon            Generate a procedural buff+debuff',
+
       '── Wheel Commands ────────────────',
-      '/add &lt;name&gt; [w]     Add item (w = weight, default 1)',
-      '/spin               Spin the wheel',
-      '/wlist              List wheel items',
-      '/wclear             Clear all wheel items',
+      '/add &lt;name&gt; [w]  Add item to wheel (w = weight)',
+      '/spin            Spin the wheel',
+      '/wlist           List wheel items',
+      '/wclear          Clear all wheel items',
       '── Other ─────────────────────────',
-      '/clear              Clear terminal',
-      '/help               Show this message',
-      '─ Examples ───────────────────────',
-      '/r 2d6+3',
-      '/add Fireball 3',
-      '/add Shield 1',
-      '/spin',
+      '/clear           Clear terminal',
+      '/help            Show this message',
     ].forEach(l => termPrint(l, 'info'));
     return;
   }
 
   const m = cmd.match(ROLL_RE);
   if (m) {
-    const count = Math.min(20, Math.max(1, parseInt(m[1])));
+    const count = Math.min(9999, Math.max(1, parseInt(m[1])));
+
+    if (m[2].toLowerCase() === 'c') {
+      termPrint(`🪙 Flipping ${count} coin${count > 1 ? 's' : ''}…`, 'info');
+      flipCoins(count);
+      return;
+    }
+
     const sides = Math.min(1000, Math.max(2, parseInt(m[2])));
     const mod   = m[3] ? parseInt(m[3]) : 0;
 
@@ -124,7 +243,7 @@ function handleTermCommand(raw) {
     const modStr = mod > 0 ? ` + ${mod}` : mod < 0 ? ` - ${Math.abs(mod)}` : '';
 
     termPrint(`🎲 Rolling ${count}d${sides}${mod !== 0 ? (mod > 0 ? '+'+mod : mod) : ''}…`, 'info');
-    termPrint(`[ ${rolls.join(' | ')} ]${modStr}`, 'rolls');
+    if (count <= 20) termPrint(`[ ${rolls.join(' | ')} ]${modStr}`, 'rolls');
     termPrint(`Total: <strong>${sum}</strong>`, 'result');
     return;
   }
@@ -134,8 +253,8 @@ function handleTermCommand(raw) {
   if (addM) {
     const label  = addM[1].trim().slice(0, 24);
     const weight = addM[2] ? Math.max(0.1, Math.min(100, parseFloat(addM[2]))) : 1;
-    if (wheelItems.length >= 20) {
-      termPrint('✗ Wheel is full (20 items max).', 'error');
+    if (wheelItems.length >= 40) {
+      termPrint('✗ Wheel is full (40 items max).', 'error');
       return;
     }
     wheelItems.push({ label, weight: +weight.toFixed(1) });
@@ -186,6 +305,25 @@ function handleTermCommand(raw) {
     return;
   }
 
+  // /surge  or  /wmt  — Wild Magic Surge
+  if (/^\/(?:surge|wmt)$/i.test(cmd)) {
+    const roll = Math.floor(Math.random() * 100) + 1;
+    const idx  = Math.floor((roll - 1) / 2);
+    const lo   = idx * 2 + 1;
+    const hi   = lo + 1;
+    termPrint(`🎲 Wild Magic Surge — roll: <strong>${String(roll).padStart(2,'0')}</strong> (${String(lo).padStart(2,'0')}–${String(hi).padStart(2,'0')})`, 'info');
+    termPrint(escHtml(WILD_MAGIC[idx]), 'result');
+    return;
+  }
+
+  // /boon — Procedural Buff Generator
+  if (/^\/boon$/i.test(cmd)) {
+    const txt = `You ${randFrom(BUFFS)} ${randFrom(CONNECTORS)} ${randFrom(DEBUFFS)}.`;
+    termPrint('✦ Arcane Boon:', 'info');
+    termPrint(escHtml(txt), 'winner');
+    return;
+  }
+
   termPrint(`✗ Unknown incantation: "${escHtml(cmd)}" — try /help`, 'error');
 }
 
@@ -193,13 +331,42 @@ function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+const termHistory = [];
+let termHistIdx = -1;
+
 function submitTerm() {
-  handleTermCommand(termInput.value);
+  const raw = termInput.value;
+  if (raw.trim()) {
+    termHistory.unshift(raw);
+    if (termHistory.length > 50) termHistory.pop();
+  }
+  termHistIdx = -1;
+  handleTermCommand(raw);
   termInput.value = '';
   termInput.focus();
 }
 
-termInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitTerm(); });
+termInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { submitTerm(); return; }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (termHistIdx < termHistory.length - 1) {
+      termHistIdx++;
+      termInput.value = termHistory[termHistIdx];
+      setTimeout(() => termInput.setSelectionRange(termInput.value.length, termInput.value.length), 0);
+    }
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (termHistIdx > 0) {
+      termHistIdx--;
+      termInput.value = termHistory[termHistIdx];
+    } else {
+      termHistIdx = -1;
+      termInput.value = '';
+    }
+  }
+});
 document.getElementById('termSubmit').addEventListener('click', submitTerm);
 
 document.querySelectorAll('.term-hints span').forEach(hint => {
@@ -415,8 +582,8 @@ document.getElementById('wheelAddBtn').addEventListener('click', () => {
   const weight      = Math.max(0.1, Math.min(100, parseFloat(weightInput.value) || 1));
 
   if (!label) { nameInput.focus(); return; }
-  if (wheelItems.length >= 20) {
-    alert('Maximum 20 items on the wheel.');
+  if (wheelItems.length >= 40) {
+    alert('Maximum 40 items on the wheel.');
     return;
   }
 
