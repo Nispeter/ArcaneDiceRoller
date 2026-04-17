@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arcane Dice Roller</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+
+  <header>
+    <h1 class="site-title">✦ Arcane Dice Roller ✦</h1>
+    <p class="site-subtitle">Roll the Bones of Fate</p>
+  </header>
+
+  <main class="grid">
+
+    <!-- ── Dice Panel ── -->
+    <section class="panel dice-panel">
+      <h2 class="panel-title">The Dice</h2>
+
+      <div class="dice-buttons">
+        <button class="die-btn" data-sides="4">d4</button>
+        <button class="die-btn" data-sides="6">d6</button>
+        <button class="die-btn" data-sides="8">d8</button>
+        <button class="die-btn" data-sides="10">d10</button>
+        <button class="die-btn" data-sides="12">d12</button>
+        <button class="die-btn" data-sides="20">d20</button>
+        <button class="die-btn" data-sides="100">d%</button>
+      </div>
+
+      <div class="dice-controls">
+        <label for="diceCount">Number of dice</label>
+        <input type="number" id="diceCount" value="1" min="1" max="20" />
+      </div>
+
+      <div id="diceResult" class="dice-result">
+        <span class="result-placeholder">Click a die to roll</span>
+      </div>
+
+      <div class="log-label">Recent Rolls</div>
+      <div id="diceLog" class="scroll-log"></div>
+    </section>
+
+    <!-- ── Command Terminal ── -->
+    <section class="panel terminal-panel">
+      <h2 class="panel-title">Arcane Terminal</h2>
+
+      <div id="termOutput" class="term-output">
+        <div class="term-line info">╔══════════════════════════════╗</div>
+        <div class="term-line info">║  Arcane Dice Terminal v1.0   ║</div>
+        <div class="term-line info">╚══════════════════════════════╝</div>
+        <div class="term-line info">Type /help for commands.</div>
+      </div>
+
+      <div class="term-input-row">
+        <span class="term-prompt">&gt;</span>
+        <input type="text" id="termInput" class="term-input"
+               placeholder="/r 1d20"
+               autocomplete="off" spellcheck="false" />
+      </div>
+
+      <div class="term-hints">
+        <span data-cmd="/r 1d20">/r 1d20</span>
+        <span data-cmd="/r 2d6+3">/r 2d6+3</span>
+        <span data-cmd="/r 4d4-2">/r 4d4-2</span>
+        <span data-cmd="/r 1d100">/r 1d100</span>
+        <span data-cmd="/help">/help</span>
+        <span data-cmd="/clear">/clear</span>
+      </div>
+    </section>
+
+    <!-- ── Randomizer Wheel ── -->
+    <section class="panel wheel-panel">
+      <h2 class="panel-title">Fate's Wheel</h2>
+
+      <div class="wheel-container">
+        <canvas id="wheelCanvas" width="340" height="340"></canvas>
+        <div class="wheel-pointer" aria-hidden="true"></div>
+      </div>
+
+      <div id="wheelWinner" class="wheel-winner hidden"></div>
+
+      <div class="wheel-add-form">
+        <input type="text" id="wheelItemName" placeholder="Item name…" maxlength="24" />
+        <input type="number" id="wheelItemWeight" value="1" min="0.1" max="100" step="0.1" title="Weight" />
+        <button id="wheelAddBtn">Add</button>
+      </div>
+      <div class="wheel-add-hint">Higher weight = larger slice = more probable</div>
+
+      <div id="wheelItems" class="wheel-items"></div>
+
+      <button id="wheelSpinBtn" class="spin-btn" disabled>✦ Spin the Wheel ✦</button>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
