@@ -260,6 +260,17 @@ function handleTermCommand(raw) {
       '/spin            Spin the wheel',
       '/wlist           List wheel items',
       '/wclear          Clear all wheel items',
+      '── Party Tracker ─────────────────',
+      '/party add &lt;name&gt; &lt;hp&gt;    Add member',
+      '/party dmg &lt;n&gt;           Damage whole party',
+      '/party dmg &lt;name&gt; &lt;n&gt;   Damage one member',
+      '/party heal &lt;n&gt;          Heal whole party',
+      '/party heal &lt;name&gt; &lt;n&gt;  Heal one member',
+      '/party tmp &lt;name&gt; &lt;n&gt;   Set temp HP',
+      '/party list              List party',
+      '/party clear             Clear party',
+      '/lrest                   Long Rest (full heal)',
+      '  Tab = autocomplete member name',
       '── Other ─────────────────────────',
       '/clear           Clear terminal',
       '/help            Show this message',
@@ -384,6 +395,118 @@ function handleTermCommand(raw) {
     return;
   }
 
+  // /lrest — Long Rest shortcut
+  if (/^\/lrest$/i.test(cmd)) {
+    if (partyMembers.length === 0) { termPrint('✗ No party members.', 'error'); return; }
+    partyMembers.forEach(m => { m.hp = m.maxHp; m.conditions = []; });
+    saveParty(); renderParty();
+    termPrint('⚔ Long Rest — the party is restored.', 'result');
+    return;
+  }
+
+  // /party <sub-command>
+  const partyM = cmd.match(/^\/party\s+(.+)$/i);
+  if (partyM) {
+    const sub = partyM[1].trim();
+
+    if (/^list$/i.test(sub)) {
+      if (partyMembers.length === 0) { termPrint('Party is empty.', 'info'); return; }
+      termPrint('── Party ─────────────────────────', 'info');
+      partyMembers.forEach(m =>
+        termPrint(`  ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP${m.conditions.length ? ' ['+m.conditions.join(', ')+']' : ''}`, 'info')
+      );
+      return;
+    }
+
+    if (/^clear$/i.test(sub)) {
+      partyMembers.length = 0;
+      saveParty(); renderParty();
+      termPrint('✦ Party cleared.', 'result');
+      return;
+    }
+
+    const addM = sub.match(/^add\s+(.+?)\s+(\d+)$/i);
+    if (addM) {
+      const name  = addM[1].trim().slice(0, 24);
+      const maxHp = Math.max(1, Math.min(9999, parseInt(addM[2])));
+      if (partyMembers.length >= HP_MAX_MEMBERS) { termPrint(`✗ Party full (${HP_MAX_MEMBERS} max).`, 'error'); return; }
+      partyMembers.push(memberDefaults({ id: Date.now(), name, hp: maxHp, maxHp }));
+      saveParty(); renderParty();
+      termPrint(`✦ Added ${escHtml(name)} (${maxHp} HP).`, 'result');
+      return;
+    }
+
+    // /party dmg <amount>  — party-wide damage
+    const dmgAllM = sub.match(/^dmg\s+(\d+)$/i);
+    if (dmgAllM) {
+      if (partyMembers.length === 0) { termPrint('✗ No party members.', 'error'); return; }
+      const amt = parseInt(dmgAllM[1]);
+      partyMembers.forEach(m => {
+        let a = amt;
+        if (m.tempHp > 0) { const ab = Math.min(m.tempHp, a); m.tempHp -= ab; a -= ab; }
+        m.hp = Math.max(0, m.hp - a);
+      });
+      saveParty(); renderParty();
+      termPrint(`💢 Party took ${amt} damage.`, 'result');
+      partyMembers.forEach(m => termPrint(`  ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'info'));
+      return;
+    }
+
+    // /party dmg <name> <amount>  — named damage
+    const dmgM = sub.match(/^dmg\s+(.+?)\s+(\d+)$/i);
+    if (dmgM) {
+      const m = partyMembers.find(p => p.name.toLowerCase().startsWith(dmgM[1].toLowerCase()));
+      if (!m) { termPrint(`✗ Member "${escHtml(dmgM[1])}" not found.`, 'error'); return; }
+      let amt = parseInt(dmgM[2]);
+      if (m.tempHp > 0) { const ab = Math.min(m.tempHp, amt); m.tempHp -= ab; amt -= ab; }
+      m.hp = Math.max(0, m.hp - amt);
+      saveParty(); renderParty();
+      termPrint(`💢 ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'result');
+      return;
+    }
+
+    // /party heal <amount>  — party-wide heal
+    const healAllM = sub.match(/^heal\s+(\d+)$/i);
+    if (healAllM) {
+      if (partyMembers.length === 0) { termPrint('✗ No party members.', 'error'); return; }
+      const amt = parseInt(healAllM[1]);
+      partyMembers.forEach(m => {
+        m.hp = Math.min(m.maxHp, m.hp + amt);
+        if (m.hp > 0) m.deathSaves = { successes: 0, failures: 0 };
+      });
+      saveParty(); renderParty();
+      termPrint(`💚 Party healed ${amt} HP.`, 'result');
+      partyMembers.forEach(m => termPrint(`  ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'info'));
+      return;
+    }
+
+    // /party heal <name> <amount>  — named heal
+    const healM = sub.match(/^heal\s+(.+?)\s+(\d+)$/i);
+    if (healM) {
+      const m = partyMembers.find(p => p.name.toLowerCase().startsWith(healM[1].toLowerCase()));
+      if (!m) { termPrint(`✗ Member "${escHtml(healM[1])}" not found.`, 'error'); return; }
+      m.hp = Math.min(m.maxHp, m.hp + parseInt(healM[2]));
+      if (m.hp > 0) m.deathSaves = { successes: 0, failures: 0 };
+      saveParty(); renderParty();
+      termPrint(`💚 ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'result');
+      return;
+    }
+
+    // /party tmp <name> <amount>  — set temp HP
+    const tmpM = sub.match(/^tmp\s+(.+?)\s+(\d+)$/i);
+    if (tmpM) {
+      const m = partyMembers.find(p => p.name.toLowerCase().startsWith(tmpM[1].toLowerCase()));
+      if (!m) { termPrint(`✗ Member "${escHtml(tmpM[1])}" not found.`, 'error'); return; }
+      m.tempHp = Math.max(0, Math.min(9999, parseInt(tmpM[2])));
+      saveParty(); renderParty();
+      termPrint(`✦ ${escHtml(m.name)}: +${m.tempHp} temp HP`, 'result');
+      return;
+    }
+
+    termPrint('✗ Usage: /party add &lt;name&gt; &lt;maxhp&gt; | dmg [name] &lt;n&gt; | heal [name] &lt;n&gt; | tmp &lt;name&gt; &lt;n&gt; | list | clear', 'error');
+    return;
+  }
+
   termPrint(`✗ Unknown incantation: "${escHtml(cmd)}" — try /help`, 'error');
 }
 
@@ -409,6 +532,17 @@ function submitTerm() {
 
 termInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') { submitTerm(); return; }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const val  = termInput.value;
+    const acM  = val.match(/^(\/party\s+(?:dmg|heal|tmp|add)\s+)(\S*)$/i);
+    if (acM && partyMembers.length > 0) {
+      const partial = acM[2].toLowerCase();
+      const match   = partyMembers.find(m => m.name.toLowerCase().startsWith(partial));
+      if (match) termInput.value = acM[1] + match.name + ' ';
+    }
+    return;
+  }
   if (e.key === 'ArrowUp') {
     e.preventDefault();
     if (termHistIdx < termHistory.length - 1) {
@@ -667,3 +801,186 @@ document.getElementById('wheelSpinBtn').addEventListener('click', spinWheel);
 
 // Initial draw
 drawWheel();
+
+/* ════════════════════════════════════════════
+   PARTY HP TRACKER
+════════════════════════════════════════════ */
+function memberDefaults(m) {
+  return {
+    tempHp: 0, exhaustion: 0,
+    deathSaves: { successes: 0, failures: 0 },
+    conditions: [],
+    ...m
+  };
+}
+function loadParty() {
+  try { return JSON.parse(localStorage.getItem('arcane-party') || '[]').map(memberDefaults); }
+  catch { return []; }
+}
+function saveParty() {
+  localStorage.setItem('arcane-party', JSON.stringify(partyMembers));
+}
+
+let partyMembers = loadParty();
+const memberAmounts = new Map();
+
+
+function renderParty() {
+  const list = document.getElementById('partyList');
+  list.innerHTML = '';
+
+  partyMembers.forEach((member, idx) => {
+    const totalHp = member.maxHp + member.tempHp;
+    const hpPct   = totalHp > 0 ? Math.max(0, member.hp   / totalHp) * 100 : 0;
+    const tmpPct  = totalHp > 0 ? (member.tempHp / totalHp) * 100 : 0;
+    const isCrit  = member.maxHp > 0 && member.hp / member.maxHp < 0.25;
+    const ds      = member.deathSaves;
+    const isDead = ds.failures >= 3;
+    const isStable = ds.successes >= 3;
+    const card   = document.createElement('div');
+    card.className = 'member-card' + (isDead ? ' member-dead' : isStable ? ' member-stable' : '');
+
+    const condChips = HP_CONDITIONS.map(c => {
+      const active = member.conditions.includes(c);
+      return `<button class="cond-chip${active ? ' active' : ''}" data-cond="${escHtml(c)}">${escHtml(c)}</button>`;
+    }).join('');
+
+    const exChip = `<button class="cond-chip exhaustion-chip${member.exhaustion > 0 ? ' active exh-lv'+member.exhaustion : ''}" data-action="exhaustion">Exhaustion${member.exhaustion > 0 ? ' '+member.exhaustion : ''}</button>`;
+
+    const dsSaves = member.hp === 0 ? `
+      <div class="death-saves">
+        <div class="ds-row">
+          <span class="ds-label">Death Saves</span>
+          <span class="ds-group">
+            ${[0,1,2].map(i => `<button class="ds-dot ds-success${ds.successes > i ? ' marked' : ''}" data-type="success" data-i="${i}">♥</button>`).join('')}
+          </span>
+          <span class="ds-sep">·</span>
+          <span class="ds-group">
+            ${[0,1,2].map(i => `<button class="ds-dot ds-fail${ds.failures > i ? ' marked' : ''}" data-type="fail" data-i="${i}">✕</button>`).join('')}
+          </span>
+          ${isStable ? '<span class="ds-status ds-stable">Stable</span>' : ''}
+          ${isDead   ? '<span class="ds-status ds-dead">Dead</span>'     : ''}
+        </div>
+      </div>` : '';
+
+    const tempTxt = member.tempHp > 0 ? `<span class="temp-badge">+${member.tempHp}</span>` : '';
+
+    card.innerHTML = `
+      <div class="member-header">
+        <span class="member-name">${escHtml(member.name)}</span>
+        <span class="member-hp-text"><strong>${member.hp}</strong>/${member.maxHp}</span>
+        ${tempTxt}
+        <button class="hp-remove-btn" title="Remove">✕</button>
+      </div>
+      <div class="hp-bar-track">
+        <div class="hp-bar-fill${isCrit ? ' critical' : ''}" style="width:${hpPct.toFixed(1)}%"></div>
+        ${member.tempHp > 0 ? `<div class="hp-bar-temp" style="width:${tmpPct.toFixed(1)}%"></div>` : ''}
+      </div>
+      <div class="hp-controls">
+        <input type="number" class="hp-amount" value="${memberAmounts.get(member.id) || 10}" min="1" max="9999" />
+        <button class="hp-dmg-btn">💢</button>
+        <button class="hp-heal-btn">💚</button>
+        <button class="hp-tmp-btn">⛨</button>
+      </div>
+      ${dsSaves}
+      <div class="conditions-row">${exChip}${condChips}</div>
+    `;
+
+    const amountEl = card.querySelector('.hp-amount');
+
+    function syncWidth() {
+      amountEl.style.width = Math.max(10, amountEl.value.length) + 'ch';
+    }
+    syncWidth();
+    amountEl.addEventListener('input', syncWidth);
+
+    function saveAmt() { memberAmounts.set(member.id, amountEl.value); }
+
+    card.querySelector('.hp-dmg-btn').addEventListener('click', () => {
+      saveAmt();
+      let amt = Math.max(1, parseInt(amountEl.value) || 1);
+      if (member.tempHp > 0) {
+        const absorbed = Math.min(member.tempHp, amt);
+        member.tempHp -= absorbed;
+        amt -= absorbed;
+      }
+      member.hp = Math.max(0, member.hp - amt);
+      saveParty(); renderParty();
+    });
+    card.querySelector('.hp-heal-btn').addEventListener('click', () => {
+      saveAmt();
+      const amt = Math.max(1, parseInt(amountEl.value) || 1);
+      member.hp = Math.min(member.maxHp, member.hp + amt);
+      if (member.hp > 0) member.deathSaves = { successes: 0, failures: 0 };
+      saveParty(); renderParty();
+    });
+    card.querySelector('.hp-tmp-btn').addEventListener('click', () => {
+      saveAmt();
+      member.tempHp = Math.max(0, Math.min(9999, parseInt(amountEl.value) || 0));
+      saveParty(); renderParty();
+    });
+    card.querySelector('.hp-remove-btn').addEventListener('click', () => {
+      partyMembers.splice(idx, 1);
+      saveParty(); renderParty();
+    });
+    card.querySelectorAll('.ds-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        const type = dot.dataset.type;
+        const i    = parseInt(dot.dataset.i);
+        const key  = type === 'success' ? 'successes' : 'failures';
+        ds[key]    = ds[key] === i + 1 ? i : i + 1;
+        saveParty(); renderParty();
+      });
+    });
+    card.querySelectorAll('.cond-chip:not(.exhaustion-chip)').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const cond = chip.dataset.cond;
+        const ci   = member.conditions.indexOf(cond);
+        if (ci === -1) member.conditions.push(cond);
+        else member.conditions.splice(ci, 1);
+        saveParty(); renderParty();
+      });
+    });
+    card.querySelector('.exhaustion-chip').addEventListener('click', () => {
+      member.exhaustion = (member.exhaustion + 1) % 7;
+      saveParty(); renderParty();
+    });
+
+    list.appendChild(card);
+  });
+
+  document.getElementById('hpLongRestBtn').disabled = partyMembers.length === 0;
+}
+
+document.getElementById('hpAddBtn').addEventListener('click', () => {
+  const nameEl  = document.getElementById('hpName');
+  const maxEl   = document.getElementById('hpMax');
+  const name    = nameEl.value.trim();
+  const maxHp   = Math.max(1, Math.min(9999, parseInt(maxEl.value) || 1));
+  if (!name) { nameEl.focus(); return; }
+  if (partyMembers.length >= HP_MAX_MEMBERS) {
+    termPrint(`✗ Party is full (${HP_MAX_MEMBERS} members max).`, 'error');
+    return;
+  }
+  partyMembers.push(memberDefaults({ id: Date.now(), name, hp: maxHp, maxHp }));
+  saveParty(); renderParty();
+  nameEl.value = '';
+  maxEl.value  = '';
+  nameEl.focus();
+});
+
+document.getElementById('hpName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('hpAddBtn').click();
+});
+
+document.getElementById('hpLongRestBtn').addEventListener('click', () => {
+  partyMembers.forEach(m => {
+    m.hp = m.maxHp; m.tempHp = 0; m.conditions = [];
+    m.exhaustion = Math.max(0, m.exhaustion - 2);
+    m.deathSaves = { successes: 0, failures: 0 };
+  });
+  saveParty(); renderParty();
+  termPrint('⚔ Long Rest — the party is restored.', 'result');
+});
+
+renderParty();

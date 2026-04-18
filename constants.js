@@ -27,3 +27,11 @@ const WHEEL_BADGE_MAX   = 12;   // max items before weight badge is hidden
 
 /* Terminal */
 const TERM_HISTORY_MAX  = 50;
+
+/* Party HP Tracker */
+const HP_MAX_MEMBERS = 12;
+const HP_CONDITIONS  = [
+  'Blinded','Charmed','Deafened','Frightened','Grappled',
+  'Incapacitated','Invisible','Paralyzed','Petrified',
+  'Poisoned','Prone','Restrained','Stunned','Unconscious'
+];

@@ -86,6 +86,10 @@
         <span data-cmd="/add  1">/add</span>
         <span data-cmd="/ra 1d20">/ra</span>
         <span data-cmd="/rd 1d20">/rd</span>
+        <span data-cmd="/party add  1">/party add</span>
+        <span data-cmd="/party dmg  10">/party dmg</span>
+        <span data-cmd="/party heal  10">/party heal</span>
+        <span data-cmd="/lrest">/lrest</span>
         <span data-cmd="/spin">/spin</span>
         <span data-cmd="/surge">/surge</span>
         <span data-cmd="/spell">/spell</span>
@@ -115,6 +119,21 @@
       <div id="wheelItems" class="wheel-items"></div>
 
       <button id="wheelSpinBtn" class="spin-btn" disabled>✦ Spin the Wheel ✦</button>
+    </section>
+
+    <!-- ── Party HP Tracker ── -->
+    <section class="panel hp-panel">
+      <h2 class="panel-title">Party Tracker</h2>
+
+      <div class="hp-add-form">
+        <input type="text"   id="hpName"   placeholder="Character name…" maxlength="24" />
+        <input type="number" id="hpMax"    placeholder="Max HP" min="1" max="9999" />
+        <button id="hpAddBtn">Add</button>
+      </div>
+
+      <div id="partyList" class="party-list"></div>
+
+      <button id="hpLongRestBtn" class="long-rest-btn" disabled>⚔ Long Rest ⚔</button>
     </section>
 
   </main>
