@@ -13,6 +13,7 @@ function setTheme(theme) {
     document.getElementById('themeSlider').value = THEMES.indexOf(theme);
   }
   localStorage.setItem('arcane-theme', theme);
+  if (typeof drawWheel === 'function') drawWheel();
 }
 
 (function initTheme() {
