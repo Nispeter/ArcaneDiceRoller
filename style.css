@@ -105,6 +105,35 @@ header {
 }
 .panel-hidden { display: none !important; }
 
+/* ── Drag Reorder ── */
+.panel-title {
+  cursor: grab;
+  user-select: none;
+  position: relative;
+}
+.panel-title::after {
+  content: '⠿';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-55%);
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  opacity: 0.2;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+.panel:hover .panel-title::after { opacity: 0.55; }
+
+.panel-dragging { opacity: 0.25; pointer-events: none; }
+
+.panel.drag-before {
+  box-shadow: -3px 0 0 var(--cyan-light), 0 0 20px rgba(34,211,238,0.4);
+}
+.panel.drag-after {
+  box-shadow:  3px 0 0 var(--cyan-light), 0 0 20px rgba(34,211,238,0.4);
+}
+
 /* ── Grid ── */
 main.grid {
   position: relative;

@@ -43,3 +43,83 @@
 
   apply();
 })();
+
+(function initDragReorder() {
+  const grid = document.querySelector('main.grid');
+  let dragSrc = null;
+
+  function panelCls(p) {
+    return [...p.classList].find(c => c !== 'panel' && c.endsWith('-panel'));
+  }
+
+  function saveOrder() {
+    const order = [...grid.querySelectorAll('.panel')].map(panelCls).filter(Boolean);
+    localStorage.setItem('arcane-panel-order', JSON.stringify(order));
+  }
+
+  function loadOrder() {
+    try {
+      const order = JSON.parse(localStorage.getItem('arcane-panel-order'));
+      if (!Array.isArray(order)) return;
+      order.forEach(cls => {
+        const el = grid.querySelector(`.${cls}`);
+        if (el) grid.appendChild(el);
+      });
+      // Append any panels added since the order was saved
+      grid.querySelectorAll('.panel').forEach(p => {
+        if (!order.includes(panelCls(p))) grid.appendChild(p);
+      });
+    } catch {}
+  }
+
+  function clearIndicators() {
+    grid.querySelectorAll('.drag-before, .drag-after').forEach(p => {
+      p.classList.remove('drag-before', 'drag-after');
+    });
+  }
+
+  grid.querySelectorAll('.panel').forEach(panel => {
+    const title = panel.querySelector('.panel-title');
+    if (!title) return;
+
+    title.addEventListener('mousedown', () => panel.setAttribute('draggable', 'true'));
+
+    panel.addEventListener('dragstart', e => {
+      if (!panel.hasAttribute('draggable')) { e.preventDefault(); return; }
+      dragSrc = panel;
+      e.dataTransfer.effectAllowed = 'move';
+      requestAnimationFrame(() => panel.classList.add('panel-dragging'));
+    });
+
+    panel.addEventListener('dragend', () => {
+      panel.classList.remove('panel-dragging');
+      panel.removeAttribute('draggable');
+      clearIndicators();
+      dragSrc = null;
+      saveOrder();
+    });
+
+    panel.addEventListener('dragover', e => {
+      if (!dragSrc || panel === dragSrc) return;
+      e.preventDefault();
+      clearIndicators();
+      const r = panel.getBoundingClientRect();
+      panel.classList.add(e.clientX < r.left + r.width / 2 ? 'drag-before' : 'drag-after');
+    });
+
+    panel.addEventListener('dragleave', e => {
+      if (!panel.contains(e.relatedTarget)) clearIndicators();
+    });
+
+    panel.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragSrc || panel === dragSrc) return;
+      const r   = panel.getBoundingClientRect();
+      const before = e.clientX < r.left + r.width / 2;
+      grid.insertBefore(dragSrc, before ? panel : panel.nextSibling);
+      clearIndicators();
+    });
+  });
+
+  loadOrder();
+})();
