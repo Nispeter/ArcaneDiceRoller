@@ -109,29 +109,25 @@ header {
 main.grid {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.4rem;
   max-width: 1380px;
   margin: 0 auto;
   padding: 0 1.4rem 3rem;
 }
 
-.dice-panel, .terminal-panel, .wheel-panel { grid-column: span 2; }
-.hp-panel, .combat-panel { grid-column: span 3; }
-.tarot-panel { grid-column: 1 / -1; }
-
-@media (max-width: 960px) {
-  main.grid { grid-template-columns: 1fr 1fr; }
-  .dice-panel, .terminal-panel, .wheel-panel,
-  .hp-panel, .combat-panel, .tarot-panel { grid-column: 1 / -1; }
+@media (max-width: 760px) {
+  main.grid .panel { flex-basis: 44% !important; }
 }
-@media (max-width: 600px) {
-  main.grid { grid-template-columns: 1fr; }
+@media (max-width: 520px) {
+  main.grid .panel { flex-basis: 100% !important; }
 }
 
 /* ── Panels ── */
 .panel {
+  flex: 1 1 30%;
+  min-width: 0;
   background: rgba(13, 0, 37, 0.82);
   border: 1px solid var(--border);
   border-radius: var(--radius);
