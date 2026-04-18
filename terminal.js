@@ -38,6 +38,7 @@ function handleTermCommand(raw) {
       '/ra &lt;NdX&gt;       #Roll with advantage (take higher)',
       '/rd &lt;NdX&gt;       #Roll with disadvantage (take lower)',
       '/r &lt;Ndc&gt;        #Flip N coins (visual for ≤2)',
+      '/rx &lt;NdX&gt;        #Exploding dice (max = re-roll and add)',
       '/roll /rolla /rolld  #Long-form aliases',
       '── Wild Magic ────────────────────',
       '/surge           #Roll on the Wild Magic Surge table',
@@ -75,6 +76,7 @@ function handleTermCommand(raw) {
       '/clist               #List all combatants',
       '/cclear              #Reset combat (keep party)',
       '── Other ─────────────────────────',
+      '/scene           #Random setting · atmosphere · hook',
       '/clear           #Clear terminal',
       '/help            #Show this message',
     ].forEach(l => termPrint(l, 'info'));
@@ -135,6 +137,46 @@ function handleTermCommand(raw) {
   // /spell
   if (/^\/spell$/i.test(cmd)) {
     termPrint(escHtml(randFrom(SPELLS)), 'winner');
+    return;
+  }
+
+  // /rx — exploding dice
+  const rxM = cmd.match(/^\/rx\s+(\d{1,4})d(\d{1,5})([+-]\d{1,6})?$/i);
+  if (rxM) {
+    const count = Math.min(DICE_MAX, Math.max(1, parseInt(rxM[1])));
+    const sides = Math.min(1000, Math.max(2, parseInt(rxM[2])));
+    const mod   = rxM[3] ? parseInt(rxM[3]) : 0;
+    const modStr = mod > 0 ? `+${mod}` : mod < 0 ? `${mod}` : '';
+    const chains = [];
+    for (let i = 0; i < count; i++) {
+      const chain = [];
+      let v;
+      do { v = Math.floor(Math.random() * sides) + 1; chain.push(v); }
+      while (v === sides && chain.length < 12);
+      chains.push(chain);
+    }
+    const totals     = chains.map(c => c.reduce((a, b) => a + b, 0));
+    const grandTotal = totals.reduce((a, b) => a + b, 0) + mod;
+    const booms      = chains.filter(c => c.length > 1).length;
+    termPrint(`💥 Rolling ${count}d${sides}${modStr} (exploding)…`, 'info');
+    showDiceResult(sides, totals, mod);
+    if (count <= DICE_DETAIL_MAX) {
+      chains.forEach(chain => {
+        const str = chain.map((v, i) => i < chain.length - 1 ? `<span style="color:#f97316">${v}!</span>` : v).join(' + ');
+        termPrint(`  [ ${str} ] = ${chain.reduce((a, b) => a + b, 0)}`, 'rolls');
+      });
+    }
+    if (booms) termPrint(`💥 ${booms} explosion${booms > 1 ? 's' : ''}`, 'info');
+    termPrint(`Total: <strong>${grandTotal}</strong>`, 'result');
+    return;
+  }
+
+  // /scene — location + atmosphere + hook
+  if (/^\/scene$/i.test(cmd)) {
+    termPrint('── Scene ─────────────────────────', 'info');
+    termPrint(`📍 <strong>Setting:</strong>    ${escHtml(randFrom(SCENE_SETTINGS))}`, 'result');
+    termPrint(`🌫 <strong>Atmosphere:</strong> ${escHtml(randFrom(SCENE_ATMOSPHERES))}`, 'info');
+    termPrint(`⚡ <strong>Hook:</strong>        ${escHtml(randFrom(SCENE_HOOKS))}`, 'winner');
     return;
   }
 
