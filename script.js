@@ -289,15 +289,15 @@ function handleTermCommand(raw) {
       '/wlist           List wheel items',
       '/wclear          Clear all wheel items',
       '── Party Tracker ─────────────────',
-      '/party add &lt;name&gt; &lt;hp&gt;    Add member',
-      '/party dmg &lt;n&gt;           Damage whole party',
-      '/party dmg &lt;name&gt; &lt;n&gt;   Damage one member',
-      '/party heal &lt;n&gt;          Heal whole party',
-      '/party heal &lt;name&gt; &lt;n&gt;  Heal one member',
-      '/party tmp &lt;name&gt; &lt;n&gt;   Set temp HP',
-      '/party list              List party',
-      '/party clear             Clear party',
-      '/lrest                   Long Rest (full heal)',
+      '/padd &lt;name&gt; &lt;hp&gt;     Add member',
+      '/pdmg &lt;n&gt;             Damage whole party',
+      '/pdmg &lt;n&gt; &lt;name&gt;     Damage one member',
+      '/pheal &lt;n&gt;            Heal whole party',
+      '/pheal &lt;n&gt; &lt;name&gt;    Heal one member',
+      '/ptmp &lt;n&gt; &lt;name&gt;     Set temp HP',
+      '/plist               List party',
+      '/pclear              Clear party',
+      '/lrest               Long Rest (full heal)',
       '  Tab = autocomplete member name',
       '── Other ─────────────────────────',
       '/clear           Clear terminal',
@@ -423,7 +423,7 @@ function handleTermCommand(raw) {
     return;
   }
 
-  // /lrest — Long Rest shortcut
+  // /lrest
   if (/^\/lrest$/i.test(cmd)) {
     if (partyMembers.length === 0) { termPrint('✗ No party members.', 'error'); return; }
     partyMembers.forEach(m => { m.hp = m.maxHp; m.conditions = []; });
@@ -432,43 +432,51 @@ function handleTermCommand(raw) {
     return;
   }
 
-  // /party <sub-command>
-  const partyM = cmd.match(/^\/party\s+(.+)$/i);
-  if (partyM) {
-    const sub = partyM[1].trim();
+  // /plist
+  if (/^\/plist$/i.test(cmd)) {
+    if (partyMembers.length === 0) { termPrint('Party is empty.', 'info'); return; }
+    termPrint('── Party ─────────────────────────', 'info');
+    partyMembers.forEach(m =>
+      termPrint(`  ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP${m.conditions.length ? ' ['+m.conditions.join(', ')+']' : ''}`, 'info')
+    );
+    return;
+  }
 
-    if (/^list$/i.test(sub)) {
-      if (partyMembers.length === 0) { termPrint('Party is empty.', 'info'); return; }
-      termPrint('── Party ─────────────────────────', 'info');
-      partyMembers.forEach(m =>
-        termPrint(`  ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP${m.conditions.length ? ' ['+m.conditions.join(', ')+']' : ''}`, 'info')
-      );
-      return;
-    }
+  // /pclear
+  if (/^\/pclear$/i.test(cmd)) {
+    partyMembers.length = 0;
+    saveParty(); renderParty();
+    termPrint('✦ Party cleared.', 'result');
+    return;
+  }
 
-    if (/^clear$/i.test(sub)) {
-      partyMembers.length = 0;
+  // /padd <name> <hp>
+  const pAddM = cmd.match(/^\/padd\s+(.+?)\s+(\d+)$/i);
+  if (pAddM) {
+    const name  = pAddM[1].trim().slice(0, 24);
+    const maxHp = Math.max(1, Math.min(9999, parseInt(pAddM[2])));
+    if (partyMembers.length >= HP_MAX_MEMBERS) { termPrint(`✗ Party full (${HP_MAX_MEMBERS} max).`, 'error'); return; }
+    partyMembers.push(memberDefaults({ id: Date.now(), name, hp: maxHp, maxHp }));
+    saveParty(); renderParty();
+    termPrint(`✦ Added ${escHtml(name)} (${maxHp} HP).`, 'result');
+    return;
+  }
+
+  // /pdmg <n> [name]
+  const pDmgM = cmd.match(/^\/pdmg\s+(\d+)(?:\s+(.+))?$/i);
+  if (pDmgM) {
+    const amt  = parseInt(pDmgM[1]);
+    const name = pDmgM[2] ? pDmgM[2].trim() : null;
+    if (name) {
+      const m = partyMembers.find(p => p.name.toLowerCase().startsWith(name.toLowerCase()));
+      if (!m) { termPrint(`✗ Member "${escHtml(name)}" not found.`, 'error'); return; }
+      let a = amt;
+      if (m.tempHp > 0) { const ab = Math.min(m.tempHp, a); m.tempHp -= ab; a -= ab; }
+      m.hp = Math.max(0, m.hp - a);
       saveParty(); renderParty();
-      termPrint('✦ Party cleared.', 'result');
-      return;
-    }
-
-    const addM = sub.match(/^add\s+(.+?)\s+(\d+)$/i);
-    if (addM) {
-      const name  = addM[1].trim().slice(0, 24);
-      const maxHp = Math.max(1, Math.min(9999, parseInt(addM[2])));
-      if (partyMembers.length >= HP_MAX_MEMBERS) { termPrint(`✗ Party full (${HP_MAX_MEMBERS} max).`, 'error'); return; }
-      partyMembers.push(memberDefaults({ id: Date.now(), name, hp: maxHp, maxHp }));
-      saveParty(); renderParty();
-      termPrint(`✦ Added ${escHtml(name)} (${maxHp} HP).`, 'result');
-      return;
-    }
-
-    // /party dmg <amount>  — party-wide damage
-    const dmgAllM = sub.match(/^dmg\s+(\d+)$/i);
-    if (dmgAllM) {
+      termPrint(`💢 ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'result');
+    } else {
       if (partyMembers.length === 0) { termPrint('✗ No party members.', 'error'); return; }
-      const amt = parseInt(dmgAllM[1]);
       partyMembers.forEach(m => {
         let a = amt;
         if (m.tempHp > 0) { const ab = Math.min(m.tempHp, a); m.tempHp -= ab; a -= ab; }
@@ -477,27 +485,24 @@ function handleTermCommand(raw) {
       saveParty(); renderParty();
       termPrint(`💢 Party took ${amt} damage.`, 'result');
       partyMembers.forEach(m => termPrint(`  ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'info'));
-      return;
     }
+    return;
+  }
 
-    // /party dmg <name> <amount>  — named damage
-    const dmgM = sub.match(/^dmg\s+(.+?)\s+(\d+)$/i);
-    if (dmgM) {
-      const m = partyMembers.find(p => p.name.toLowerCase().startsWith(dmgM[1].toLowerCase()));
-      if (!m) { termPrint(`✗ Member "${escHtml(dmgM[1])}" not found.`, 'error'); return; }
-      let amt = parseInt(dmgM[2]);
-      if (m.tempHp > 0) { const ab = Math.min(m.tempHp, amt); m.tempHp -= ab; amt -= ab; }
-      m.hp = Math.max(0, m.hp - amt);
+  // /pheal <n> [name]
+  const pHealM = cmd.match(/^\/pheal\s+(\d+)(?:\s+(.+))?$/i);
+  if (pHealM) {
+    const amt  = parseInt(pHealM[1]);
+    const name = pHealM[2] ? pHealM[2].trim() : null;
+    if (name) {
+      const m = partyMembers.find(p => p.name.toLowerCase().startsWith(name.toLowerCase()));
+      if (!m) { termPrint(`✗ Member "${escHtml(name)}" not found.`, 'error'); return; }
+      m.hp = Math.min(m.maxHp, m.hp + amt);
+      if (m.hp > 0) m.deathSaves = { successes: 0, failures: 0 };
       saveParty(); renderParty();
-      termPrint(`💢 ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'result');
-      return;
-    }
-
-    // /party heal <amount>  — party-wide heal
-    const healAllM = sub.match(/^heal\s+(\d+)$/i);
-    if (healAllM) {
+      termPrint(`💚 ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'result');
+    } else {
       if (partyMembers.length === 0) { termPrint('✗ No party members.', 'error'); return; }
-      const amt = parseInt(healAllM[1]);
       partyMembers.forEach(m => {
         m.hp = Math.min(m.maxHp, m.hp + amt);
         if (m.hp > 0) m.deathSaves = { successes: 0, failures: 0 };
@@ -505,33 +510,20 @@ function handleTermCommand(raw) {
       saveParty(); renderParty();
       termPrint(`💚 Party healed ${amt} HP.`, 'result');
       partyMembers.forEach(m => termPrint(`  ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'info'));
-      return;
     }
+    return;
+  }
 
-    // /party heal <name> <amount>  — named heal
-    const healM = sub.match(/^heal\s+(.+?)\s+(\d+)$/i);
-    if (healM) {
-      const m = partyMembers.find(p => p.name.toLowerCase().startsWith(healM[1].toLowerCase()));
-      if (!m) { termPrint(`✗ Member "${escHtml(healM[1])}" not found.`, 'error'); return; }
-      m.hp = Math.min(m.maxHp, m.hp + parseInt(healM[2]));
-      if (m.hp > 0) m.deathSaves = { successes: 0, failures: 0 };
-      saveParty(); renderParty();
-      termPrint(`💚 ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'result');
-      return;
-    }
-
-    // /party tmp <name> <amount>  — set temp HP
-    const tmpM = sub.match(/^tmp\s+(.+?)\s+(\d+)$/i);
-    if (tmpM) {
-      const m = partyMembers.find(p => p.name.toLowerCase().startsWith(tmpM[1].toLowerCase()));
-      if (!m) { termPrint(`✗ Member "${escHtml(tmpM[1])}" not found.`, 'error'); return; }
-      m.tempHp = Math.max(0, Math.min(9999, parseInt(tmpM[2])));
-      saveParty(); renderParty();
-      termPrint(`✦ ${escHtml(m.name)}: +${m.tempHp} temp HP`, 'result');
-      return;
-    }
-
-    termPrint('✗ Usage: /party add &lt;name&gt; &lt;maxhp&gt; | dmg [name] &lt;n&gt; | heal [name] &lt;n&gt; | tmp &lt;name&gt; &lt;n&gt; | list | clear', 'error');
+  // /ptmp <n> <name>
+  const pTmpM = cmd.match(/^\/ptmp\s+(\d+)\s+(.+)$/i);
+  if (pTmpM) {
+    const amt  = Math.max(0, Math.min(9999, parseInt(pTmpM[1])));
+    const name = pTmpM[2].trim();
+    const m = partyMembers.find(p => p.name.toLowerCase().startsWith(name.toLowerCase()));
+    if (!m) { termPrint(`✗ Member "${escHtml(name)}" not found.`, 'error'); return; }
+    m.tempHp = amt;
+    saveParty(); renderParty();
+    termPrint(`✦ ${escHtml(m.name)}: +${m.tempHp} temp HP`, 'result');
     return;
   }
 
@@ -563,7 +555,7 @@ termInput.addEventListener('keydown', e => {
   if (e.key === 'Tab') {
     e.preventDefault();
     const val  = termInput.value;
-    const acM  = val.match(/^(\/party\s+(?:dmg|heal|tmp|add)\s+)(\S*)$/i);
+    const acM  = val.match(/^(\/p(?:dmg|heal|tmp)\s+\d+\s+)(\S*)$/i);
     if (acM && partyMembers.length > 0) {
       const partial = acM[2].toLowerCase();
       const match   = partyMembers.find(m => m.name.toLowerCase().startsWith(partial));
