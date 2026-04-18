@@ -20,6 +20,7 @@
       <button class="panel-toggle-btn" data-panel="terminal">💻 Terminal</button>
       <button class="panel-toggle-btn" data-panel="wheel">🎡 Wheel</button>
       <button class="panel-toggle-btn" data-panel="party">❤️ Party</button>
+      <button class="panel-toggle-btn" data-panel="tarot">🔮 Oracle</button>
     </nav>
   </header>
 
@@ -101,6 +102,8 @@
         <span data-cmd="/spin">/spin</span>
         <span data-cmd="/surge">/surge</span>
         <span data-cmd="/spell">/spell</span>
+        <span data-cmd="/oracle 1">/oracle 1</span>
+        <span data-cmd="/oracle 3">/oracle 3</span>
         <span data-cmd="/wlist">/wlist</span>
         <span data-cmd="/help">/help</span>
       </div>
@@ -142,6 +145,29 @@
       <div id="partyList" class="party-list"></div>
 
       <button id="hpLongRestBtn" class="long-rest-btn" disabled>⚔ Long Rest ⚔</button>
+    </section>
+
+    <!-- ── Oracle / Tarot ── -->
+    <section class="panel tarot-panel">
+      <h2 class="panel-title">The Oracle</h2>
+
+      <div class="tarot-controls">
+        <button class="tarot-draw-btn" data-draw="1">Draw 1</button>
+        <button class="tarot-draw-btn" data-draw="3">Draw 3</button>
+        <button id="tarotShuffleBtn" class="tarot-shuffle-btn">✦ Shuffle Deck</button>
+        <div class="deck-slider-wrap" id="deckSliderWrap" data-mode="major">
+          <span class="deck-end">22</span>
+          <div class="deck-slider-col">
+            <input type="range" id="deckSlider" min="0" max="1" step="1" value="0" />
+            <div class="deck-ticks"><span></span><span></span></div>
+          </div>
+          <span class="deck-end">78</span>
+        </div>
+        <span id="tarotDeckCount" class="tarot-deck-count">22 cards</span>
+      </div>
+
+      <div id="tarotSpread" class="tarot-spread"></div>
+      <div id="tarotReading" class="tarot-reading"></div>
     </section>
 
   </main>

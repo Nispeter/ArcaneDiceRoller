@@ -22,14 +22,14 @@
    PANEL TOGGLES
 ════════════════════════════════════════════ */
 (function initPanelToggles() {
-  const KEYS = ['dice', 'terminal', 'wheel', 'party'];
+  const KEYS = ['dice', 'terminal', 'wheel', 'party', 'tarot'];
   let state;
   try { state = JSON.parse(localStorage.getItem('arcane-panels')); } catch {}
   if (!state) state = Object.fromEntries(KEYS.map(k => [k, true]));
 
   function apply() {
     KEYS.forEach(key => {
-      const sel = key === 'party' ? '.hp-panel' : `.${key}-panel`;
+      const sel = key === 'party' ? '.hp-panel' : key === 'tarot' ? '.tarot-panel' : `.${key}-panel`;
       document.querySelector(sel).classList.toggle('panel-hidden', !state[key]);
       document.querySelector(`[data-panel="${key}"]`).classList.toggle('active', !!state[key]);
     });
@@ -62,6 +62,12 @@ advSlider.addEventListener('input', () => {
 
 function rollDice(count, sides) {
   return Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1);
+}
+
+function pushDiceLog(logText) {
+  diceLog.unshift(logText);
+  if (diceLog.length > DICE_LOG_MAX) diceLog.pop();
+  document.getElementById('diceLog').innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
 }
 
 function showDiceResult(sides, rolls, modifier, mode, otherRolls) {
@@ -98,9 +104,7 @@ function showDiceResult(sides, rolls, modifier, mode, otherRolls) {
       ? `<span class="log-die">${label}</span> = <span class="log-total">${sum}</span>`
       : `<span class="log-die">${label}</span> → ${detail} = <span class="log-total">${sum}</span>`;
   }
-  diceLog.unshift(logText);
-  if (diceLog.length > DICE_LOG_MAX) diceLog.pop();
-  document.getElementById('diceLog').innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
+  pushDiceLog(logText);
 }
 
 function rollAndShow(count, sides, modifier, mode) {
@@ -154,18 +158,19 @@ function createD4Card(face) {
 }
 
 function rollD4Fate(count, mode) {
-  mode = mode || 'normal';
-  function oneD4() {
+  const m = mode || 'normal';
+  let advPair = null;
+  const results = Array.from({ length: count }, () => {
     const a = D4_FACES[Math.floor(Math.random() * D4_FACES.length)];
-    if (mode === 'normal') return a;
+    if (m === 'normal') return a;
     const b = D4_FACES[Math.floor(Math.random() * D4_FACES.length)];
-    return mode === 'adv'
-      ? (a.value >= b.value ? a : b)
-      : (a.value <= b.value ? a : b);
-  }
-  const results   = Array.from({ length: count }, oneD4);
+    const winner = m === 'adv' ? (a.value >= b.value ? a : b) : (a.value <= b.value ? a : b);
+    const loser  = winner === a ? b : a;
+    if (count === 1) advPair = { a, b, winner, loser };
+    return winner;
+  });
   const sum       = results.reduce((a, f) => a + f.value, 0);
-  const modeGlyph = mode === 'adv' ? ' ↑' : mode === 'dis' ? ' ↓' : '';
+  const modeGlyph = m === 'adv' ? ' ↑' : m === 'dis' ? ' ↓' : '';
   const resultEl  = document.getElementById('diceResult');
   resultEl.innerHTML = '';
 
@@ -193,12 +198,10 @@ function rollD4Fate(count, mode) {
     termPrint(count === 1
       ? `${results[0].logChar} ${results[0].phrase}`
       : `d4 ×${count}${modeGlyph}  sum: ${sum}`, 'rolls');
-    diceLog.unshift(logText);
-    if (diceLog.length > DICE_LOG_MAX) diceLog.pop();
-    document.getElementById('diceLog').innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
+    pushDiceLog(logText);
   }
 
-  if (count <= COIN_ANIM_MAX) {
+  if (count <= COIN_ANIM_MAX && m === 'normal') {
     const row = document.createElement('div');
     row.className = 'coins-row';
 
@@ -223,13 +226,40 @@ function rollD4Fate(count, mode) {
 
     box.appendChild(row);
     box.appendChild(names);
+  } else if (advPair) {
+    const row = document.createElement('div');
+    row.className = 'coins-row';
+    const names = document.createElement('div');
+    names.className = 'coin-names';
+    names.style.opacity = '0';
+    const span = document.createElement('span');
+    span.style.cssText = `color:${advPair.winner.color};text-shadow:0 0 8px ${advPair.winner.glow}`;
+    span.textContent = advPair.winner.phrase;
+    names.appendChild(span);
+
+    let pending = 2;
+    const wrapA = createD4Card(advPair.a);
+    const wrapB = createD4Card(advPair.b);
+    [wrapA, wrapB].forEach(wrap => {
+      wrap.querySelector('.d4-card').addEventListener('transitionend', () => {
+        if (--pending === 0) {
+          const loserWrap = advPair.loser === advPair.a ? wrapA : wrapB;
+          loserWrap.style.transition = 'opacity 0.5s, filter 0.5s';
+          loserWrap.style.opacity    = '0.22';
+          loserWrap.style.filter     = 'grayscale(0.85)';
+          settle(names);
+        }
+      }, { once: true });
+      row.appendChild(wrap);
+    });
+    box.appendChild(row);
+    box.appendChild(names);
   } else {
     const tot = document.createElement('div');
     tot.className = 'result-total';
     tot.style.fontSize = '1.8rem';
     tot.textContent = sum;
     box.appendChild(tot);
-
     const breakdown = document.createElement('div');
     breakdown.className = 'result-detail';
     breakdown.innerHTML = D4_FACES.filter(f => faceCounts[f.name] > 0)
@@ -295,14 +325,12 @@ function flipCoins(count) {
       names.style.opacity = '1';
     }
     if (count === 1) {
-      termPrint(results[0] === 'dux' ? '⚔ Dux has spoken' : '✦ Elskan has an eye on you', 'rolls');
+      termPrint(results[0] === 'dux' ? '⚔ Dux has spoken' : '✦ Elskan watches over you', 'rolls');
     } else {
       const e = results.filter(r => r === 'elskan').length;
       termPrint(`coin ×${count}  ✦ ${e}  ⚔ ${count - e}`, 'rolls');
     }
-    diceLog.unshift(logText);
-    if (diceLog.length > DICE_LOG_MAX) diceLog.pop();
-    document.getElementById('diceLog').innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
+    pushDiceLog(logText);
   }
 
   if (count <= COIN_ANIM_MAX) {
@@ -396,7 +424,11 @@ function handleTermCommand(raw) {
       '/wmt             Alias for /surge',
       '── Buff Generator ────────────────',
       '/spell           Draw a random spell from 10 000 effects',
-
+      '── Oracle ────────────────────────',
+      '/oracle 1        Draw 1 tarot card',
+      '/oracle 3        Draw 3 cards (Past · Present · Future)',
+      '/oracle major    Switch to 22-card Major Arcana deck',
+      '/oracle full     Switch to full 78-card deck',
       '── Wheel Commands ────────────────',
       '/add &lt;name&gt; [w]  Add item to wheel (w = weight)',
       '/spin            Spin the wheel',
@@ -537,11 +569,18 @@ function handleTermCommand(raw) {
     return;
   }
 
+  // /oracle N  — draw tarot cards
+  const oracleN = cmd.match(/^\/oracle\s+([13])$/i);
+  if (oracleN) { drawTarot(parseInt(oracleN[1])); return; }
+  // /oracle full | /oracle major  — switch deck mode
+  const oracleM = cmd.match(/^\/oracle\s+(full|major)$/i);
+  if (oracleM) { setTarotMode(oracleM[1].toLowerCase() === 'full' ? 'full' : 'major'); return; }
+
   // /lrest
   if (/^\/lrest$/i.test(cmd)) {
     if (partyMembers.length === 0) { termPrint('✗ No party members.', 'error'); return; }
     partyMembers.forEach(m => { m.hp = m.maxHp; m.conditions = []; });
-    saveParty(); renderParty();
+    syncParty();
     termPrint('⚔ Long Rest — the party is restored.', 'result');
     return;
   }
@@ -559,7 +598,7 @@ function handleTermCommand(raw) {
   // /pclear
   if (/^\/pclear$/i.test(cmd)) {
     partyMembers.length = 0;
-    saveParty(); renderParty();
+    syncParty();
     termPrint('✦ Party cleared.', 'result');
     return;
   }
@@ -569,9 +608,9 @@ function handleTermCommand(raw) {
   if (pAddM) {
     const name  = pAddM[1].trim().slice(0, 24);
     const maxHp = Math.max(1, Math.min(9999, parseInt(pAddM[2])));
-    if (partyMembers.length >= HP_MAX_MEMBERS) { termPrint(`✗ Party full (${HP_MAX_MEMBERS} max).`, 'error'); return; }
+    if (partyMembers.length >= HP_MAX_MEMBERS) { termPrint(`✗ Party is full (${HP_MAX_MEMBERS} members max).`, 'error'); return; }
     partyMembers.push(memberDefaults({ id: Date.now(), name, hp: maxHp, maxHp }));
-    saveParty(); renderParty();
+    syncParty();
     termPrint(`✦ Added ${escHtml(name)} (${maxHp} HP).`, 'result');
     return;
   }
@@ -587,7 +626,7 @@ function handleTermCommand(raw) {
       let a = amt;
       if (m.tempHp > 0) { const ab = Math.min(m.tempHp, a); m.tempHp -= ab; a -= ab; }
       m.hp = Math.max(0, m.hp - a);
-      saveParty(); renderParty();
+      syncParty();
       termPrint(`💢 ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'result');
     } else {
       if (partyMembers.length === 0) { termPrint('✗ No party members.', 'error'); return; }
@@ -596,7 +635,7 @@ function handleTermCommand(raw) {
         if (m.tempHp > 0) { const ab = Math.min(m.tempHp, a); m.tempHp -= ab; a -= ab; }
         m.hp = Math.max(0, m.hp - a);
       });
-      saveParty(); renderParty();
+      syncParty();
       termPrint(`💢 Party took ${amt} damage.`, 'result');
       partyMembers.forEach(m => termPrint(`  ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'info'));
     }
@@ -613,7 +652,7 @@ function handleTermCommand(raw) {
       if (!m) { termPrint(`✗ Member "${escHtml(name)}" not found.`, 'error'); return; }
       m.hp = Math.min(m.maxHp, m.hp + amt);
       if (m.hp > 0) m.deathSaves = { successes: 0, failures: 0 };
-      saveParty(); renderParty();
+      syncParty();
       termPrint(`💚 ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'result');
     } else {
       if (partyMembers.length === 0) { termPrint('✗ No party members.', 'error'); return; }
@@ -621,7 +660,7 @@ function handleTermCommand(raw) {
         m.hp = Math.min(m.maxHp, m.hp + amt);
         if (m.hp > 0) m.deathSaves = { successes: 0, failures: 0 };
       });
-      saveParty(); renderParty();
+      syncParty();
       termPrint(`💚 Party healed ${amt} HP.`, 'result');
       partyMembers.forEach(m => termPrint(`  ${escHtml(m.name)}: ${m.hp}/${m.maxHp} HP`, 'info'));
     }
@@ -636,7 +675,7 @@ function handleTermCommand(raw) {
     const m = partyMembers.find(p => p.name.toLowerCase().startsWith(name.toLowerCase()));
     if (!m) { termPrint(`✗ Member "${escHtml(name)}" not found.`, 'error'); return; }
     m.tempHp = amt;
-    saveParty(); renderParty();
+    syncParty();
     termPrint(`✦ ${escHtml(m.name)}: +${m.tempHp} temp HP`, 'result');
     return;
   }
@@ -911,8 +950,8 @@ document.getElementById('wheelAddBtn').addEventListener('click', () => {
   const weight      = Math.max(0.1, Math.min(100, parseFloat(weightInput.value) || 1));
 
   if (!label) { nameInput.focus(); return; }
-  if (wheelItems.length >= 40) {
-    alert(`Maximum ${WHEEL_MAX_ITEMS} items on the wheel.`);
+  if (wheelItems.length >= WHEEL_MAX_ITEMS) {
+    termPrint(`✗ Wheel full (${WHEEL_MAX_ITEMS} items max).`, 'error');
     return;
   }
 
@@ -954,6 +993,7 @@ function loadParty() {
 function saveParty() {
   localStorage.setItem('arcane-party', JSON.stringify(partyMembers));
 }
+function syncParty() { saveParty(); renderParty(); }
 
 let partyMembers = loadParty();
 const memberAmounts = new Map();
@@ -1039,23 +1079,23 @@ function renderParty() {
         amt -= absorbed;
       }
       member.hp = Math.max(0, member.hp - amt);
-      saveParty(); renderParty();
+      syncParty();
     });
     card.querySelector('.hp-heal-btn').addEventListener('click', () => {
       saveAmt();
       const amt = Math.max(1, parseInt(amountEl.value) || 1);
       member.hp = Math.min(member.maxHp, member.hp + amt);
       if (member.hp > 0) member.deathSaves = { successes: 0, failures: 0 };
-      saveParty(); renderParty();
+      syncParty();
     });
     card.querySelector('.hp-tmp-btn').addEventListener('click', () => {
       saveAmt();
       member.tempHp = Math.max(0, Math.min(9999, parseInt(amountEl.value) || 0));
-      saveParty(); renderParty();
+      syncParty();
     });
     card.querySelector('.hp-remove-btn').addEventListener('click', () => {
       partyMembers.splice(idx, 1);
-      saveParty(); renderParty();
+      syncParty();
     });
     card.querySelectorAll('.ds-dot').forEach(dot => {
       dot.addEventListener('click', () => {
@@ -1063,7 +1103,7 @@ function renderParty() {
         const i    = parseInt(dot.dataset.i);
         const key  = type === 'success' ? 'successes' : 'failures';
         ds[key]    = ds[key] === i + 1 ? i : i + 1;
-        saveParty(); renderParty();
+        syncParty();
       });
     });
     card.querySelectorAll('.cond-chip:not(.exhaustion-chip)').forEach(chip => {
@@ -1072,12 +1112,12 @@ function renderParty() {
         const ci   = member.conditions.indexOf(cond);
         if (ci === -1) member.conditions.push(cond);
         else member.conditions.splice(ci, 1);
-        saveParty(); renderParty();
+        syncParty();
       });
     });
     card.querySelector('.exhaustion-chip').addEventListener('click', () => {
       member.exhaustion = (member.exhaustion + 1) % 7;
-      saveParty(); renderParty();
+      syncParty();
     });
 
     list.appendChild(card);
@@ -1097,7 +1137,7 @@ document.getElementById('hpAddBtn').addEventListener('click', () => {
     return;
   }
   partyMembers.push(memberDefaults({ id: Date.now(), name, hp: maxHp, maxHp }));
-  saveParty(); renderParty();
+  syncParty();
   nameEl.value = '';
   maxEl.value  = '';
   nameEl.focus();
@@ -1113,8 +1153,133 @@ document.getElementById('hpLongRestBtn').addEventListener('click', () => {
     m.exhaustion = Math.max(0, m.exhaustion - 2);
     m.deathSaves = { successes: 0, failures: 0 };
   });
-  saveParty(); renderParty();
+  syncParty();
   termPrint('⚔ Long Rest — the party is restored.', 'result');
 });
 
 renderParty();
+
+
+/* ════════════════════════════════════════════
+   ORACLE / TAROT
+════════════════════════════════════════════ */
+let tarotDeck = [];
+let tarotMode = 'major';
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function shuffleTarot() {
+  const source = tarotMode === 'full' ? [...TAROT, ...TAROT_MINOR] : TAROT;
+  tarotDeck = source.map(c => ({ ...c, isRev: Math.random() < 0.3 }));
+  for (let i = tarotDeck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [tarotDeck[i], tarotDeck[j]] = [tarotDeck[j], tarotDeck[i]];
+  }
+  document.getElementById('tarotDeckCount').textContent = `${tarotDeck.length} cards`;
+}
+
+function setTarotMode(mode) {
+  tarotMode = mode;
+  const wrap = document.getElementById('deckSliderWrap');
+  wrap.dataset.mode = mode;
+  document.getElementById('deckSlider').value = mode === 'full' ? '1' : '0';
+  shuffleTarot();
+  document.getElementById('tarotSpread').innerHTML  = '';
+  document.getElementById('tarotReading').innerHTML = '';
+  termPrint(`✦ Oracle deck: ${mode === 'full' ? '78 cards (full deck)' : '22 cards (Major Arcana)'}`, 'info');
+}
+
+function createTarotCard(entry) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tarot-wrap';
+  const card = document.createElement('div');
+  card.className = 'tarot-card';
+  const bg     = hexToRgba(entry.color, 0.12);
+  const border = hexToRgba(entry.color, 0.55);
+  const glow   = hexToRgba(entry.color, 0.65);
+  const numLabel = entry.label ?? String(entry.num).padStart(2, '0');
+  card.innerHTML = `
+    <div class="tarot-face tarot-back"><span class="tarot-back-deco">✦</span></div>
+    <div class="tarot-face tarot-front" style="background:${bg};border-color:${border};box-shadow:inset 0 0 14px ${hexToRgba(entry.color, 0.12)}">
+      <span class="tarot-card-num" style="color:${entry.color}">${numLabel}</span>
+      <span class="tarot-card-symbol" style="color:${entry.color};filter:drop-shadow(0 0 6px ${glow})">${entry.symbol}</span>
+      <span class="tarot-card-name" style="color:${entry.color}">${entry.name}</span>
+      ${entry.isRev ? '<span class="tarot-rev-badge">↓ rev</span>' : ''}
+    </div>`;
+  wrap.appendChild(card);
+  return { wrap, card };
+}
+
+function drawTarot(count) {
+  if (tarotDeck.length < count) shuffleTarot();
+  const drawn = [];
+  for (let i = 0; i < count; i++) drawn.push(tarotDeck.pop());
+  document.getElementById('tarotDeckCount').textContent = `${tarotDeck.length} cards`;
+
+  const spread  = document.getElementById('tarotSpread');
+  const reading = document.getElementById('tarotReading');
+  spread.innerHTML  = '';
+  reading.innerHTML = '';
+
+  const LABELS = count === 3 ? ['Past', 'Present', 'Future'] : [null];
+  const cards = drawn.map((entry, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'tarot-spread-slot';
+    if (LABELS[i]) {
+      const lbl = document.createElement('div');
+      lbl.className = 'tarot-position-label';
+      lbl.textContent = LABELS[i];
+      slot.appendChild(lbl);
+    }
+    const { wrap, card } = createTarotCard(entry);
+    slot.appendChild(wrap);
+    spread.appendChild(slot);
+    return { card, entry, label: LABELS[i] };
+  });
+
+  cards.forEach(({ card }, i) => {
+    const spins = (COIN_SPINS_MIN + Math.floor(Math.random() * COIN_SPINS_RANGE)) * 360;
+    setTimeout(() => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        card.style.transform = `rotateY(${spins + 180}deg)`;
+      }));
+    }, i * 420);
+  });
+
+  setTimeout(() => {
+    drawn.forEach((entry, i) => {
+      const meaning = entry.isRev ? entry.reversed : entry.upright;
+      const div = document.createElement('div');
+      div.className = 'tarot-reading-entry';
+      div.innerHTML = `
+        ${LABELS[i] ? `<div class="tarot-reading-pos">${LABELS[i]}</div>` : ''}
+        <div class="tarot-reading-name" style="color:${entry.color}">
+          ${entry.symbol} ${entry.name}
+          ${entry.isRev ? '<span class="tarot-rev-badge">↓ Reversed</span>' : ''}
+        </div>
+        <div class="tarot-reading-meaning">${meaning}</div>`;
+      reading.appendChild(div);
+    });
+    termPrint(`✦ Oracle: ${drawn.map(e => `${e.name}${e.isRev?' (rev)':''}`).join(' · ')}`, 'result');
+  }, (drawn.length - 1) * 420 + 1400);
+}
+
+document.querySelectorAll('.tarot-draw-btn').forEach(btn =>
+  btn.addEventListener('click', () => drawTarot(parseInt(btn.dataset.draw)))
+);
+document.getElementById('tarotShuffleBtn').addEventListener('click', () => {
+  shuffleTarot();
+  document.getElementById('tarotSpread').innerHTML  = '';
+  document.getElementById('tarotReading').innerHTML = '';
+});
+
+document.getElementById('deckSlider').addEventListener('input', e => {
+  setTarotMode(e.target.value === '1' ? 'full' : 'major');
+});
+
+shuffleTarot();

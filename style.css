@@ -110,16 +110,19 @@ main.grid {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 1.4rem;
   max-width: 1380px;
   margin: 0 auto;
   padding: 0 1.4rem 3rem;
 }
 
+.dice-panel, .terminal-panel, .wheel-panel { grid-column: span 2; }
+.hp-panel, .tarot-panel { grid-column: 1 / -1; }
+
 @media (max-width: 960px) {
   main.grid { grid-template-columns: 1fr 1fr; }
-  .wheel-panel { grid-column: 1 / -1; }
+  .dice-panel, .terminal-panel, .wheel-panel, .hp-panel, .tarot-panel { grid-column: 1 / -1; }
 }
 @media (max-width: 600px) {
   main.grid { grid-template-columns: 1fr; }
@@ -791,7 +794,7 @@ button:disabled { opacity: 0.38; cursor: not-allowed; }
 /* ━━━━━━━━━━━━━━━━━━━━
    PARTY HP TRACKER
 ━━━━━━━━━━━━━━━━━━━━ */
-.hp-panel { grid-column: 1 / -1; }
+.hp-panel { grid-column: span 2; }
 
 .hp-add-form {
   display: flex;
@@ -805,6 +808,9 @@ button:disabled { opacity: 0.38; cursor: not-allowed; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
   gap: 0.75rem;
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .member-card {
@@ -1058,3 +1064,237 @@ button:disabled { opacity: 0.38; cursor: not-allowed; }
   box-shadow: var(--glow-p);
 }
 .long-rest-btn:disabled { opacity: 0.35; cursor: default; }
+
+/* ━━━━━━━━━━━━━━━━━━━━
+   ORACLE / TAROT
+━━━━━━━━━━━━━━━━━━━━ */
+.tarot-panel { grid-column: span 2; }
+
+.tarot-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+.tarot-draw-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+}
+.tarot-shuffle-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  border-color: rgba(124,58,237,0.45);
+  color: #c4b5fd;
+}
+.tarot-shuffle-btn:hover {
+  background: rgba(124,58,237,0.18);
+  box-shadow: var(--glow-p);
+}
+.deck-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.deck-slider-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 52px;
+  gap: 2px;
+}
+.deck-ticks {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 7px;
+}
+.deck-ticks span {
+  display: block;
+  width: 1px;
+  height: 4px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 1px;
+}
+.deck-end {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.deck-slider-wrap[data-mode="major"] .deck-end:first-child { color: #c4b5fd; }
+.deck-slider-wrap[data-mode="full"]  .deck-end:last-child  { color: #fbbf24; }
+
+#deckSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  background: linear-gradient(to right, rgba(124,58,237,0.6), rgba(251,191,36,0.35));
+}
+#deckSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #c4b5fd;
+  background: var(--purple);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+#deckSlider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #c4b5fd;
+  background: var(--purple);
+  cursor: pointer;
+}
+.deck-slider-wrap[data-mode="full"] #deckSlider::-webkit-slider-thumb {
+  background: #d97706;
+  border-color: #fbbf24;
+  box-shadow: 0 0 6px rgba(251,191,36,0.6);
+}
+.deck-slider-wrap[data-mode="full"] #deckSlider::-moz-range-thumb {
+  background: #d97706;
+  border-color: #fbbf24;
+}
+.tarot-deck-count {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+/* Spread layout */
+.tarot-spread {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  min-height: 148px;
+}
+.tarot-spread-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+.tarot-position-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+/* 3-D card */
+.tarot-wrap {
+  perspective: 800px;
+  width: 80px;
+  height: 130px;
+  flex-shrink: 0;
+}
+.tarot-card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 1.3s cubic-bezier(0.33, 0, 0.15, 1);
+}
+.tarot-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.tarot-back {
+  background: radial-gradient(circle at 40% 35%, #1e0a4e, #08001a);
+  border-color: rgba(124,58,237,0.4);
+}
+.tarot-back-deco {
+  font-size: 1.8rem;
+  color: rgba(124,58,237,0.25);
+  line-height: 1;
+}
+.tarot-front {
+  transform: rotateY(180deg);
+  padding: 0.3rem 0.22rem;
+  justify-content: space-between;
+}
+.tarot-card-num {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.52rem;
+  opacity: 0.65;
+  align-self: flex-start;
+}
+.tarot-card-symbol {
+  font-size: 2rem;
+  line-height: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tarot-card-name {
+  font-family: 'Cinzel', serif;
+  font-size: 0.4rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.4;
+}
+.tarot-rev-badge {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.48rem;
+  color: #f97316;
+  letter-spacing: 0.05em;
+}
+
+/* Reading panel below cards */
+.tarot-reading {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+.tarot-reading-entry {
+  background: rgba(124,58,237,0.06);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.65rem;
+}
+.tarot-reading-name {
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.tarot-reading-pos {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  margin-bottom: 0.2rem;
+}
+.tarot-reading-meaning {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  margin-top: 0.2rem;
+  line-height: 1.4;
+}
