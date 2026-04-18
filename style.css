@@ -118,11 +118,13 @@ main.grid {
 }
 
 .dice-panel, .terminal-panel, .wheel-panel { grid-column: span 2; }
-.hp-panel, .tarot-panel { grid-column: 1 / -1; }
+.hp-panel, .combat-panel { grid-column: span 3; }
+.tarot-panel { grid-column: 1 / -1; }
 
 @media (max-width: 960px) {
   main.grid { grid-template-columns: 1fr 1fr; }
-  .dice-panel, .terminal-panel, .wheel-panel, .hp-panel, .tarot-panel { grid-column: 1 / -1; }
+  .dice-panel, .terminal-panel, .wheel-panel,
+  .hp-panel, .combat-panel, .tarot-panel { grid-column: 1 / -1; }
 }
 @media (max-width: 600px) {
   main.grid { grid-template-columns: 1fr; }
@@ -794,7 +796,6 @@ button:disabled { opacity: 0.38; cursor: not-allowed; }
 /* ━━━━━━━━━━━━━━━━━━━━
    PARTY HP TRACKER
 ━━━━━━━━━━━━━━━━━━━━ */
-.hp-panel { grid-column: span 2; }
 
 .hp-add-form {
   display: flex;
@@ -1066,9 +1067,162 @@ button:disabled { opacity: 0.38; cursor: not-allowed; }
 .long-rest-btn:disabled { opacity: 0.35; cursor: default; }
 
 /* ━━━━━━━━━━━━━━━━━━━━
+   COMBAT INITIATIVE
+━━━━━━━━━━━━━━━━━━━━ */
+
+.combat-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.combat-round-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.88rem;
+  color: var(--cyan-light);
+  flex: 1;
+  text-shadow: var(--glow-c);
+}
+.combat-next-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+  padding: 0.28rem 0.8rem;
+  border-color: var(--cyan);
+  color: var(--cyan-light);
+  background: rgba(6,182,212,0.08);
+}
+.combat-next-btn:hover {
+  background: rgba(6,182,212,0.2);
+  box-shadow: var(--glow-c);
+}
+.combat-clear-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  padding: 0.26rem 0.6rem;
+  border-color: rgba(248,113,113,0.4);
+  color: #f87171;
+  background: rgba(248,113,113,0.06);
+}
+.combat-clear-btn:hover {
+  background: rgba(248,113,113,0.18);
+}
+
+.combat-add-form {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.combat-add-form input[type="text"]   { flex: 1; min-width: 110px; }
+.combat-add-form input[type="number"] { width: 4rem; }
+.combat-faction-select {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--cyan-pale);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+}
+.combat-faction-select:focus {
+  border-color: var(--cyan);
+  outline: none;
+}
+
+.combat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.combat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  background: rgba(0,0,0,0.25);
+  transition: background 0.2s, box-shadow 0.15s;
+}
+.combat-row.faction-party   { border-left-color: var(--cyan); }
+.combat-row.faction-ally    { border-left-color: #4ade80; }
+.combat-row.faction-neutral { border-left-color: #fbbf24; }
+.combat-row.faction-enemy   { border-left-color: #f87171; }
+
+.combat-row.combat-active {
+  background: rgba(34,211,238,0.07);
+  box-shadow: 0 0 10px rgba(34,211,238,0.2), inset 0 0 14px rgba(34,211,238,0.04);
+}
+.combat-row.combat-active.faction-enemy {
+  background: rgba(248,113,113,0.07);
+  box-shadow: 0 0 10px rgba(248,113,113,0.2);
+}
+.combat-row.combat-active.faction-ally {
+  background: rgba(74,222,128,0.07);
+  box-shadow: 0 0 10px rgba(74,222,128,0.2);
+}
+.combat-row.combat-active.faction-neutral {
+  background: rgba(251,191,36,0.07);
+  box-shadow: 0 0 10px rgba(251,191,36,0.2);
+}
+.combat-row.combat-skipped { opacity: 0.32; }
+
+.combat-init-input {
+  width: 3rem !important;
+  padding: 0.18rem 0.25rem !important;
+  text-align: center;
+  font-size: 0.76rem !important;
+  flex-shrink: 0;
+}
+.combat-faction-pip {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.faction-party   .combat-faction-pip { background: var(--cyan); }
+.faction-ally    .combat-faction-pip { background: #4ade80; }
+.faction-neutral .combat-faction-pip { background: #fbbf24; }
+.faction-enemy   .combat-faction-pip { background: #f87171; }
+
+.combat-name {
+  flex: 1;
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.combat-row.combat-active              .combat-name { color: var(--cyan-light); }
+.combat-row.combat-active.faction-enemy .combat-name { color: #f87171; }
+.combat-row.combat-active.faction-ally  .combat-name { color: #4ade80; }
+.combat-row.combat-active.faction-neutral .combat-name { color: #fbbf24; }
+
+.combat-hp {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.combat-hp-sep { opacity: 0.45; }
+
+.combat-remove-btn {
+  padding: 0.1rem 0.28rem !important;
+  font-size: 0.6rem !important;
+  min-width: 0 !important;
+  opacity: 0.45;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.combat-remove-btn:hover { opacity: 1; }
+
+/* ━━━━━━━━━━━━━━━━━━━━
    ORACLE / TAROT
 ━━━━━━━━━━━━━━━━━━━━ */
-.tarot-panel { grid-column: span 2; }
 
 .tarot-controls {
   display: flex;
@@ -1173,7 +1327,7 @@ button:disabled { opacity: 0.38; cursor: not-allowed; }
   display: flex;
   gap: 1.2rem;
   justify-content: center;
-  align-items: flex-end;
+  align-items: flex-start;
   flex-wrap: wrap;
   min-height: 148px;
 }

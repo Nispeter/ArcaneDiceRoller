@@ -65,6 +65,13 @@ function handleTermCommand(raw) {
       '/pclear              #Clear party',
       '/lrest               #Long Rest (full heal)',
       '  Tab = autocomplete member name',
+      '── Combat Initiative ─────────────',
+      '/cinit &lt;name&gt; &lt;n&gt;    #Set initiative (−1 to skip)',
+      '/cadd &lt;name&gt; &lt;n&gt; [faction]  #Add ally/neutral/enemy',
+      '/cskip &lt;name&gt;        #Set initiative to −1 (skip)',
+      '/cnext               #Advance to next turn',
+      '/clist               #List all combatants',
+      '/cclear              #Reset combat (keep party)',
       '── Other ─────────────────────────',
       '/clear           #Clear terminal',
       '/help            #Show this message',
@@ -281,6 +288,69 @@ function handleTermCommand(raw) {
     m.tempHp = amt;
     syncParty();
     termPrint(`✦ ${escHtml(m.name)}: +${m.tempHp} temp HP`, 'result');
+    return;
+  }
+
+  // /cnext — advance initiative turn
+  if (/^\/cnext$/i.test(cmd)) {
+    nextCombatTurn();
+    return;
+  }
+
+  // /cclear — reset combat
+  if (/^\/cclear$/i.test(cmd)) {
+    document.getElementById('combatClearBtn').click();
+    return;
+  }
+
+  // /clist — list combatants
+  if (/^\/clist$/i.test(cmd)) {
+    if (combatants.length === 0) { termPrint('Combat list is empty.', 'info'); return; }
+    termPrint('── Initiative ────────────────────', 'info');
+    combatAllSorted().forEach(c => {
+      const pm     = partyMembers.find(m => m.id === c.id);
+      const hpTxt  = pm ? ` ${pm.hp}/${pm.maxHp}HP` : '';
+      const skipTxt = c.initiative < 0 ? ' (skip)' : '';
+      const initStr = c.initiative < 0 ? ' —' : String(c.initiative).padStart(2);
+      termPrint(`  ${initStr}  [${c.faction.slice(0,4)}]  ${escHtml(c.name)}${hpTxt}${skipTxt}`, 'info');
+    });
+    return;
+  }
+
+  // /cinit <name> <init>
+  const cInitM = cmd.match(/^\/cinit\s+(.+?)\s+(-?\d+)$/i);
+  if (cInitM) {
+    const name = cInitM[1].trim();
+    const init = Math.max(-1, Math.min(99, parseInt(cInitM[2])));
+    const c    = combatants.find(x => x.name.toLowerCase().startsWith(name.toLowerCase()));
+    if (!c) { termPrint(`✗ "${escHtml(name)}" not in combat list.`, 'error'); return; }
+    c.initiative = init;
+    renderCombat();
+    termPrint(`⚔ ${escHtml(c.name)} initiative → ${init}${init < 0 ? ' (skipped)' : ''}`, 'result');
+    return;
+  }
+
+  // /cadd <name> <init> [faction]
+  const cAddM = cmd.match(/^\/cadd\s+(.+?)\s+(-?\d+)(?:\s+(ally|neutral|enemy))?$/i);
+  if (cAddM) {
+    const name       = cAddM[1].trim().slice(0, 24);
+    const initiative = Math.max(-1, Math.min(99, parseInt(cAddM[2])));
+    const faction    = (cAddM[3] || 'enemy').toLowerCase();
+    combatants.push({ id: Date.now(), name, faction, initiative });
+    renderCombat();
+    termPrint(`⚔ Added ${escHtml(name)} [${faction}] init ${initiative}.`, 'result');
+    return;
+  }
+
+  // /cskip <name>
+  const cSkipM = cmd.match(/^\/cskip\s+(.+)$/i);
+  if (cSkipM) {
+    const name = cSkipM[1].trim();
+    const c    = combatants.find(x => x.name.toLowerCase().startsWith(name.toLowerCase()));
+    if (!c) { termPrint(`✗ "${escHtml(name)}" not in combat list.`, 'error'); return; }
+    c.initiative = -1;
+    renderCombat();
+    termPrint(`⚔ ${escHtml(c.name)} will be skipped.`, 'result');
     return;
   }
 

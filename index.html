@@ -20,6 +20,7 @@
       <button class="panel-toggle-btn" data-panel="terminal">💻 Terminal</button>
       <button class="panel-toggle-btn" data-panel="wheel">🎡 Wheel</button>
       <button class="panel-toggle-btn" data-panel="party">❤️ Party</button>
+      <button class="panel-toggle-btn" data-panel="combat">⚔ Combat</button>
       <button class="panel-toggle-btn" data-panel="tarot">🔮 Oracle</button>
     </nav>
   </header>
@@ -99,6 +100,10 @@
         <span data-cmd="/ptmp 10">/ptmp</span>
         <span data-cmd="/plist">/plist</span>
         <span data-cmd="/lrest">/lrest</span>
+        <span data-cmd="/cnext">/cnext</span>
+        <span data-cmd="/cinit  10">/cinit</span>
+        <span data-cmd="/cadd  10 enemy">/cadd</span>
+        <span data-cmd="/clist">/clist</span>
         <span data-cmd="/spin">/spin</span>
         <span data-cmd="/surge">/surge</span>
         <span data-cmd="/spell">/spell</span>
@@ -147,6 +152,30 @@
       <button id="hpLongRestBtn" class="long-rest-btn" disabled>⚔ Long Rest ⚔</button>
     </section>
 
+    <!-- ── Initiative Combat Tracker ── -->
+    <section class="panel combat-panel">
+      <h2 class="panel-title">Initiative</h2>
+
+      <div class="combat-header-row">
+        <span class="combat-round-label" id="combatRound">—</span>
+        <button id="combatNextBtn" class="combat-next-btn">▶ Next Turn</button>
+        <button id="combatClearBtn" class="combat-clear-btn">✕ Reset</button>
+      </div>
+
+      <div class="combat-add-form">
+        <input type="text"   id="combatName"    placeholder="Name…" maxlength="24" />
+        <input type="number" id="combatInit"    placeholder="Init" value="10" min="-1" max="99" />
+        <select id="combatFaction" class="combat-faction-select">
+          <option value="ally">Ally</option>
+          <option value="neutral">Neutral</option>
+          <option value="enemy">Enemy</option>
+        </select>
+        <button id="combatAddBtn">Add</button>
+      </div>
+
+      <div id="combatList" class="combat-list"></div>
+    </section>
+
     <!-- ── Oracle / Tarot ── -->
     <section class="panel tarot-panel">
       <h2 class="panel-title">The Oracle</h2>
@@ -180,6 +209,7 @@
   <script src="dice.js"></script>
   <script src="wheel.js"></script>
   <script src="party.js"></script>
+  <script src="combat.js"></script>
   <script src="oracle.js"></script>
   <script src="terminal.js"></script>
 </body>

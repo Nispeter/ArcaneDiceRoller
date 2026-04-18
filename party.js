@@ -20,7 +20,11 @@ function saveParty() {
   localStorage.setItem('arcane-party', JSON.stringify(partyMembers));
 }
 
-function syncParty() { saveParty(); renderParty(); }
+function syncParty() {
+  saveParty();
+  renderParty();
+  if (typeof syncCombatFromParty === 'function') syncCombatFromParty();
+}
 
 let partyMembers  = loadParty();
 const memberAmounts = new Map();
