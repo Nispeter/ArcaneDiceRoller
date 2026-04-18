@@ -74,6 +74,23 @@ body.theme-infernal {
   --panel-bg:      rgba(26,2,0,0.84);
   --panel-inset:   rgba(239,68,68,0.04);
 }
+body.theme-bloom {
+  --purple:        #db2777;
+  --purple-light:  #ec4899;
+  --purple-dim:    rgba(219,39,119,0.25);
+  --cyan:          #f472b6;
+  --cyan-light:    #f9a8d4;
+  --cyan-pale:     #fce7f3;
+  --bg:            #1a0012;
+  --bg2:           #250018;
+  --border:        #831843;
+  --text-dim:      #9d6585;
+  --glow-p:        0 0 12px rgba(219,39,119,0.45);
+  --glow-c:        0 0 14px rgba(249,168,212,0.5);
+  --glow-c-strong: 0 0 24px rgba(249,168,212,0.75);
+  --panel-bg:      rgba(26,0,18,0.84);
+  --panel-inset:   rgba(219,39,119,0.04);
+}
 
 /* ── Body / Background ── */
 body {
@@ -100,6 +117,11 @@ body.theme-infernal {
   background-image:
     radial-gradient(ellipse 80% 60% at 20% 10%, rgba(185,28,28,0.25) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 80% 90%, rgba(217,119,6,0.18) 0%, transparent 55%);
+}
+body.theme-bloom {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(219,39,119,0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(244,114,182,0.14) 0%, transparent 55%);
 }
 
 /* ── Star Field ── */
@@ -203,7 +225,8 @@ header {
 .theme-slider-wrap[data-theme="arcane"]   .theme-ticks span:nth-child(1),
 .theme-slider-wrap[data-theme="fey"]      .theme-ticks span:nth-child(2),
 .theme-slider-wrap[data-theme="ice"]      .theme-ticks span:nth-child(3),
-.theme-slider-wrap[data-theme="infernal"] .theme-ticks span:nth-child(4) {
+.theme-slider-wrap[data-theme="infernal"] .theme-ticks span:nth-child(4),
+.theme-slider-wrap[data-theme="bloom"]    .theme-ticks span:nth-child(5) {
   color: var(--cyan-light);
   text-shadow: 0 0 6px var(--cyan-light);
 }
@@ -215,7 +238,7 @@ header {
   border-radius: 2px;
   outline: none;
   cursor: pointer;
-  background: linear-gradient(to right, #7c3aed, #16a34a, #1d4ed8, #b91c1c);
+  background: linear-gradient(to right, #7c3aed, #16a34a, #1d4ed8, #b91c1c, #db2777);
   border: none;
 }
 #themeSlider::-webkit-slider-thumb {
@@ -1547,6 +1570,10 @@ body.theme-infernal .tarot-back {
   background: radial-gradient(circle at 40% 35%, #450a0a, #1a0200);
   border-color: rgba(185,28,28,0.45);
 }
+body.theme-bloom .tarot-back {
+  background: radial-gradient(circle at 40% 35%, #4a0028, #1a0012);
+  border-color: rgba(219,39,119,0.45);
+}
 .tarot-back-deco {
   font-size: 1.8rem;
   color: color-mix(in srgb, var(--purple) 25%, transparent);
@@ -1555,6 +1582,7 @@ body.theme-infernal .tarot-back {
 body.theme-fey      .tarot-back-deco { color: rgba(22,163,74,0.3); }
 body.theme-ice      .tarot-back-deco { color: rgba(29,78,216,0.3); }
 body.theme-infernal .tarot-back-deco { color: rgba(185,28,28,0.3); }
+body.theme-bloom    .tarot-back-deco { color: rgba(219,39,119,0.3); }
 .tarot-front {
   transform: rotateY(180deg);
   padding: 0.3rem 0.22rem;

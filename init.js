@@ -2,7 +2,7 @@
    init.js — Stars background + panel toggles
 ════════════════════════════════════════════ */
 
-const THEMES = ['arcane', 'fey', 'ice', 'infernal'];
+const THEMES = ['arcane', 'fey', 'ice', 'infernal', 'bloom'];
 
 function setTheme(theme) {
   document.body.className = document.body.className.replace(/\btheme-\S+/g, '').trim();
