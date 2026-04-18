@@ -20,6 +20,53 @@
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Themes ── */
+body.theme-fey {
+  --purple:        #16a34a;
+  --purple-light:  #22c55e;
+  --purple-dim:    rgba(34,197,94,0.25);
+  --cyan:          #0d9488;
+  --cyan-light:    #14b8a6;
+  --cyan-pale:     #ccfbf1;
+  --bg:            #001208;
+  --bg2:           #001a0c;
+  --border:        #14532d;
+  --text-dim:      #5d8f6e;
+  --glow-p:        0 0 12px rgba(34,197,94,0.45);
+  --glow-c:        0 0 14px rgba(20,184,166,0.5);
+  --glow-c-strong: 0 0 24px rgba(20,184,166,0.75);
+}
+body.theme-ice {
+  --purple:        #1d4ed8;
+  --purple-light:  #3b82f6;
+  --purple-dim:    rgba(59,130,246,0.25);
+  --cyan:          #0ea5e9;
+  --cyan-light:    #38bdf8;
+  --cyan-pale:     #e0f2fe;
+  --bg:            #000d1a;
+  --bg2:           #001225;
+  --border:        #1e3a5f;
+  --text-dim:      #5b8aae;
+  --glow-p:        0 0 12px rgba(59,130,246,0.45);
+  --glow-c:        0 0 14px rgba(56,189,248,0.5);
+  --glow-c-strong: 0 0 24px rgba(56,189,248,0.75);
+}
+body.theme-infernal {
+  --purple:        #b91c1c;
+  --purple-light:  #ef4444;
+  --purple-dim:    rgba(239,68,68,0.25);
+  --cyan:          #d97706;
+  --cyan-light:    #fbbf24;
+  --cyan-pale:     #fef3c7;
+  --bg:            #1a0200;
+  --bg2:           #200300;
+  --border:        #7f1d1d;
+  --text-dim:      #9a6450;
+  --glow-p:        0 0 12px rgba(239,68,68,0.45);
+  --glow-c:        0 0 14px rgba(251,191,36,0.5);
+  --glow-c-strong: 0 0 24px rgba(251,191,36,0.75);
+}
+
 /* ── Body / Background ── */
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -30,6 +77,21 @@ body {
   background-image:
     radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,58,237,0.18) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 80% 90%, rgba(6,182,212,0.12) 0%, transparent 55%);
+}
+body.theme-fey {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(22,163,74,0.2) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(13,148,136,0.13) 0%, transparent 55%);
+}
+body.theme-ice {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(29,78,216,0.2) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(14,165,233,0.13) 0%, transparent 55%);
+}
+body.theme-infernal {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(185,28,28,0.25) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(217,119,6,0.18) 0%, transparent 55%);
 }
 
 /* ── Star Field ── */
@@ -104,6 +166,32 @@ header {
   color: #e9d5ff;
 }
 .panel-hidden { display: none !important; }
+
+/* ── Theme Switcher ── */
+.theme-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+.theme-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.16rem 0.6rem;
+  border-radius: 20px;
+  letter-spacing: 0.08em;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+}
+.theme-btn[data-theme="arcane"]   { border-color: #7c3aed; color: #a78bfa; }
+.theme-btn[data-theme="fey"]      { border-color: #16a34a; color: #4ade80; }
+.theme-btn[data-theme="ice"]      { border-color: #2563eb; color: #60a5fa; }
+.theme-btn[data-theme="infernal"] { border-color: #b91c1c; color: #f87171; }
+.theme-btn[data-theme="arcane"].active,   .theme-btn[data-theme="arcane"]:hover   { background: rgba(124,58,237,0.22);  box-shadow: 0 0 7px rgba(124,58,237,0.5);  color: #c4b5fd; }
+.theme-btn[data-theme="fey"].active,      .theme-btn[data-theme="fey"]:hover      { background: rgba(34,197,94,0.2);    box-shadow: 0 0 7px rgba(34,197,94,0.5);   color: #86efac; }
+.theme-btn[data-theme="ice"].active,      .theme-btn[data-theme="ice"]:hover      { background: rgba(59,130,246,0.2);   box-shadow: 0 0 7px rgba(59,130,246,0.5);  color: #bfdbfe; }
+.theme-btn[data-theme="infernal"].active, .theme-btn[data-theme="infernal"]:hover { background: rgba(239,68,68,0.2);    box-shadow: 0 0 7px rgba(239,68,68,0.5);   color: #fca5a5; }
 
 /* ── Drag Reorder ── */
 .panel-title {

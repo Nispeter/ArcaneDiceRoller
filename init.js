@@ -2,6 +2,23 @@
    init.js — Stars background + panel toggles
 ════════════════════════════════════════════ */
 
+function setTheme(theme) {
+  document.body.className = document.body.className.replace(/\btheme-\S+/g, '').trim();
+  if (theme !== 'arcane') document.body.classList.add(`theme-${theme}`);
+  document.querySelectorAll('.theme-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.theme === theme)
+  );
+  localStorage.setItem('arcane-theme', theme);
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem('arcane-theme') || 'arcane';
+  setTheme(saved);
+  document.querySelectorAll('.theme-btn').forEach(b =>
+    b.addEventListener('click', () => setTheme(b.dataset.theme))
+  );
+})();
+
 (function spawnStars() {
   const container = document.querySelector('.stars');
   for (let i = 0; i < STAR_COUNT; i++) {

@@ -77,6 +77,7 @@ function handleTermCommand(raw) {
       '/cclear              #Reset combat (keep party)',
       '── Other ─────────────────────────',
       '/scene           #Random setting · atmosphere · hook',
+      '/theme &lt;name&gt;    #Switch theme: arcane fey ice infernal',
       '/clear           #Clear terminal',
       '/help            #Show this message',
     ].forEach(l => termPrint(l, 'info'));
@@ -137,6 +138,14 @@ function handleTermCommand(raw) {
   // /spell
   if (/^\/spell$/i.test(cmd)) {
     termPrint(escHtml(randFrom(SPELLS)), 'winner');
+    return;
+  }
+
+  // /theme
+  const themeM = cmd.match(/^\/theme\s+(arcane|fey|ice|infernal)$/i);
+  if (themeM) {
+    setTheme(themeM[1].toLowerCase());
+    termPrint(`✦ Theme: ${themeM[1]}`, 'result');
     return;
   }
 
