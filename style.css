@@ -75,6 +75,36 @@ header {
   margin-top: 0.4rem;
 }
 
+.panel-toggles {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+.panel-toggle-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+  padding: 0.22rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.panel-toggle-btn.active {
+  background: rgba(124,58,237,0.18);
+  border-color: var(--purple);
+  color: #c4b5fd;
+  box-shadow: 0 0 6px rgba(124,58,237,0.35);
+}
+.panel-toggle-btn:hover {
+  border-color: var(--purple);
+  color: #e9d5ff;
+}
+.panel-hidden { display: none !important; }
+
 /* ── Grid ── */
 main.grid {
   position: relative;

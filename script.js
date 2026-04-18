@@ -19,6 +19,34 @@
 })();
 
 /* ════════════════════════════════════════════
+   PANEL TOGGLES
+════════════════════════════════════════════ */
+(function initPanelToggles() {
+  const KEYS = ['dice', 'terminal', 'wheel', 'party'];
+  let state;
+  try { state = JSON.parse(localStorage.getItem('arcane-panels')); } catch {}
+  if (!state) state = Object.fromEntries(KEYS.map(k => [k, true]));
+
+  function apply() {
+    KEYS.forEach(key => {
+      const sel = key === 'party' ? '.hp-panel' : `.${key}-panel`;
+      document.querySelector(sel).classList.toggle('panel-hidden', !state[key]);
+      document.querySelector(`[data-panel="${key}"]`).classList.toggle('active', !!state[key]);
+    });
+    localStorage.setItem('arcane-panels', JSON.stringify(state));
+  }
+
+  document.querySelectorAll('[data-panel]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state[btn.dataset.panel] = !state[btn.dataset.panel];
+      apply();
+    });
+  });
+
+  apply();
+})();
+
+/* ════════════════════════════════════════════
    DICE PANEL
 ════════════════════════════════════════════ */
 const diceLog = [];
