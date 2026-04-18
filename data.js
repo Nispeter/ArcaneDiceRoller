@@ -68,16 +68,16 @@ const D4_FACES = [
     color: '#4ade80', glow: 'rgba(74,222,128,0.7)',  bg: 'rgba(34,197,94,0.12)',  border: 'rgba(74,222,128,0.55)',
   },
   {
-    name: 'Navnlos', value: 2, logChar: '☠',
-    phrase: 'Navnlos is judging your actions',
-    icon: '&#9760;',
-    color: '#d8b4fe', glow: 'rgba(216,180,254,0.7)', bg: 'rgba(168,85,247,0.12)', border: 'rgba(192,132,252,0.55)',
-  },
-  {
-    name: 'Pandora', value: 3, logChar: '♥',
+    name: 'Pandora', value: 2, logChar: '♥',
     phrase: 'Pandora likes you',
     icon: '&#9829;',
     color: '#f472b6', glow: 'rgba(244,114,182,0.7)', bg: 'rgba(236,72,153,0.12)', border: 'rgba(244,114,182,0.55)',
+  },
+  {
+    name: 'Navnlos', value: 3, logChar: '☠',
+    phrase: 'Navnlos is judging your actions',
+    icon: '&#9760;',
+    color: '#d8b4fe', glow: 'rgba(216,180,254,0.7)', bg: 'rgba(168,85,247,0.12)', border: 'rgba(192,132,252,0.55)',
   },
   {
     name: 'Eevona', value: 4, logChar: '✦',
