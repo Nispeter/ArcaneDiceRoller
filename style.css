@@ -607,6 +607,18 @@ button:disabled { opacity: 0.38; cursor: not-allowed; }
 /* ━━━━━━━━━━━━━━━━━━━━
    COIN TOSS
 ━━━━━━━━━━━━━━━━━━━━ */
+.d4-die-btn {
+  background: linear-gradient(135deg, rgba(74,222,128,0.1), rgba(168,85,247,0.12), rgba(244,114,182,0.1));
+  border-color: rgba(192,132,252,0.45);
+  color: #d8b4fe;
+}
+.d4-die-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(74,222,128,0.18), rgba(168,85,247,0.22), rgba(244,114,182,0.18));
+  border-color: #c084fc;
+  box-shadow: 0 0 10px rgba(192,132,252,0.4);
+  color: #f3e8ff;
+}
+
 .coin-die-btn {
   background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(8,145,178,0.12));
   border-color: rgba(251,191,36,0.45);
@@ -695,6 +707,82 @@ button:disabled { opacity: 0.38; cursor: not-allowed; }
 }
 .coin-name-elskan { color: #fbbf24; text-shadow: 0 0 8px #fbbf24; }
 .coin-name-dux    { color: #d44400; text-shadow: 0 0 8px #d44400; }
+
+/* D4 Fate Cards */
+.d4-wrap {
+  perspective: 700px;
+  width: 76px;
+  height: 96px;
+  flex-shrink: 0;
+}
+
+.d4-card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 1.5s cubic-bezier(0.33, 0, 0.15, 1);
+}
+
+.d4-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 2px solid var(--border);
+}
+
+.d4-back {
+  background: radial-gradient(circle at 35% 35%, #1a0a2e, #08001a);
+  border-color: rgba(124,58,237,0.35);
+  box-shadow: inset 0 0 12px rgba(124,58,237,0.15);
+}
+
+.d4-front {
+  transform: rotateY(180deg);
+}
+
+.d4-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  line-height: 1;
+}
+.d4-icon svg { width: 100%; height: 100%; }
+
+.d4-value-badge {
+  position: absolute;
+  top: 5px;
+  left: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.d4-back-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.7rem;
+  color: rgba(124,58,237,0.5);
+  letter-spacing: 0.15em;
+}
+
+.d4-name {
+  font-family: 'Cinzel', serif;
+  font-size: 0.5rem;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
 
 /* Log coloring */
 .log-elskan { color: #fbbf24; }

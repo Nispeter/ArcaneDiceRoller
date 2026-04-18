@@ -123,11 +123,124 @@ document.querySelectorAll('.die-btn').forEach(btn => {
     void btn.offsetWidth;
     btn.classList.add('rolling');
     btn.addEventListener('animationend', () => btn.classList.remove('rolling'), { once: true });
+    if (btn.dataset.sides === '4')    { rollD4Fate(count, rollMode); return; }
     if (btn.dataset.sides === 'coin') { flipCoins(count); return; }
     const sides = parseInt(btn.dataset.sides);
     rollAndShow(count, sides, 0, rollMode);
   });
 });
+
+/* ════════════════════════════════════════════
+   D4 FATE
+════════════════════════════════════════════ */
+function createD4Card(face) {
+  const wrap = document.createElement('div');
+  wrap.className = 'd4-wrap';
+  const card = document.createElement('div');
+  card.className = 'd4-card';
+  card.innerHTML = `
+    <div class="d4-face d4-back"><span class="d4-back-label">d4</span></div>
+    <div class="d4-face d4-front" style="background:${face.bg};border-color:${face.border};box-shadow:inset 0 0 14px ${face.glow}">
+      <span class="d4-value-badge" style="color:${face.color}">${face.value}</span>
+      <div class="d4-icon" style="color:${face.color};filter:drop-shadow(0 0 7px ${face.glow})">${face.icon}</div>
+      <span class="d4-name" style="color:${face.color}">${face.name}</span>
+    </div>`;
+  wrap.appendChild(card);
+  const spins = (COIN_SPINS_MIN + Math.floor(Math.random() * COIN_SPINS_RANGE)) * 360;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    card.style.transform = `rotateY(${spins + 180}deg)`;
+  }));
+  return wrap;
+}
+
+function rollD4Fate(count, mode) {
+  mode = mode || 'normal';
+  function oneD4() {
+    const a = D4_FACES[Math.floor(Math.random() * D4_FACES.length)];
+    if (mode === 'normal') return a;
+    const b = D4_FACES[Math.floor(Math.random() * D4_FACES.length)];
+    return mode === 'adv'
+      ? (a.value >= b.value ? a : b)
+      : (a.value <= b.value ? a : b);
+  }
+  const results   = Array.from({ length: count }, oneD4);
+  const sum       = results.reduce((a, f) => a + f.value, 0);
+  const modeGlyph = mode === 'adv' ? ' ↑' : mode === 'dis' ? ' ↓' : '';
+  const resultEl  = document.getElementById('diceResult');
+  resultEl.innerHTML = '';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:0.5rem;width:100%';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'result-label';
+  lbl.textContent = count === 1 ? `d4${modeGlyph}` : `${count}d4${modeGlyph} = ${sum}`;
+  box.appendChild(lbl);
+
+  const faceCounts = {};
+  D4_FACES.forEach(f => { faceCounts[f.name] = 0; });
+  results.forEach(f => faceCounts[f.name]++);
+
+  const logText = count === 1
+    ? `<span class="log-die">d4${modeGlyph}</span> → <span style="color:${results[0].color}">${results[0].logChar} ${results[0].name} (${results[0].value})</span>`
+    : `<span class="log-die">${count}d4${modeGlyph}</span> = <span class="log-total">${sum}</span> &nbsp;`
+      + D4_FACES.filter(f => faceCounts[f.name] > 0)
+          .map(f => `<span style="color:${f.color}">${f.logChar}×${faceCounts[f.name]}</span>`)
+          .join(' ');
+
+  function settle(names) {
+    if (names) { names.style.transition = 'opacity 0.35s ease'; names.style.opacity = '1'; }
+    termPrint(count === 1
+      ? `${results[0].logChar} ${results[0].phrase}`
+      : `d4 ×${count}${modeGlyph}  sum: ${sum}`, 'rolls');
+    diceLog.unshift(logText);
+    if (diceLog.length > DICE_LOG_MAX) diceLog.pop();
+    document.getElementById('diceLog').innerHTML = diceLog.map(e => `<div class="log-entry">${e}</div>`).join('');
+  }
+
+  if (count <= COIN_ANIM_MAX) {
+    const row = document.createElement('div');
+    row.className = 'coins-row';
+
+    const names = document.createElement('div');
+    names.className = 'coin-names';
+    names.style.opacity = '0';
+    results.forEach(f => {
+      const span = document.createElement('span');
+      span.style.cssText = `color:${f.color};text-shadow:0 0 8px ${f.glow}`;
+      span.textContent = count === 1 ? f.phrase : `${f.name} (${f.value})`;
+      names.appendChild(span);
+    });
+
+    let pending = count;
+    results.forEach(f => {
+      const wrap = createD4Card(f);
+      wrap.querySelector('.d4-card').addEventListener('transitionend', () => {
+        if (--pending === 0) settle(names);
+      }, { once: true });
+      row.appendChild(wrap);
+    });
+
+    box.appendChild(row);
+    box.appendChild(names);
+  } else {
+    const tot = document.createElement('div');
+    tot.className = 'result-total';
+    tot.style.fontSize = '1.8rem';
+    tot.textContent = sum;
+    box.appendChild(tot);
+
+    const breakdown = document.createElement('div');
+    breakdown.className = 'result-detail';
+    breakdown.innerHTML = D4_FACES.filter(f => faceCounts[f.name] > 0)
+      .map(f => `<span style="color:${f.color}">${f.logChar} ${f.name} ×${faceCounts[f.name]}</span>`)
+      .join('  ');
+    box.appendChild(breakdown);
+    settle(null);
+  }
+
+  resultEl.appendChild(box);
+}
 
 /* ════════════════════════════════════════════
    COIN TOSS
@@ -182,9 +295,10 @@ function flipCoins(count) {
       names.style.opacity = '1';
     }
     if (count === 1) {
-      termPrint(results[0] === 'dux' ? '⚔ Dux has spoken' : '✦ Elskan watches over you', 'rolls');
+      termPrint(results[0] === 'dux' ? '⚔ Dux has spoken' : '✦ Elskan has an eye on you', 'rolls');
     } else {
-      termPrint(results.map(r => r === 'dux' ? '⚔ Dux' : '✦ Elskan').join('  ·  '), 'rolls');
+      const e = results.filter(r => r === 'elskan').length;
+      termPrint(`coin ×${count}  ✦ ${e}  ⚔ ${count - e}`, 'rolls');
     }
     diceLog.unshift(logText);
     if (diceLog.length > DICE_LOG_MAX) diceLog.pop();

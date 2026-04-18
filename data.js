@@ -58,3 +58,31 @@ const WILD_MAGIC = [
 ];
 
 function randFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+/* ── D4 Fate Faces ── */
+const D4_FACES = [
+  {
+    name: 'Bolverk', value: 1, logChar: '▲',
+    phrase: 'Bolverk circles above you',
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L3 10h4l-3 9 8-4 8 4-3-9h4z"/></svg>',
+    color: '#4ade80', glow: 'rgba(74,222,128,0.7)',  bg: 'rgba(34,197,94,0.12)',  border: 'rgba(74,222,128,0.55)',
+  },
+  {
+    name: 'Navnlos', value: 2, logChar: '☠',
+    phrase: 'Navnlos is judging your actions',
+    icon: '&#9760;',
+    color: '#d8b4fe', glow: 'rgba(216,180,254,0.7)', bg: 'rgba(168,85,247,0.12)', border: 'rgba(192,132,252,0.55)',
+  },
+  {
+    name: 'Pandora', value: 3, logChar: '♥',
+    phrase: 'Pandora likes you',
+    icon: '&#9829;',
+    color: '#f472b6', glow: 'rgba(244,114,182,0.7)', bg: 'rgba(236,72,153,0.12)', border: 'rgba(244,114,182,0.55)',
+  },
+  {
+    name: 'Eevona', value: 4, logChar: '✦',
+    phrase: 'Eevona is writing your story',
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 4h9v16H2zM13 4h9v16h-9zM11 3h2v18h-2z"/></svg>',
+    color: '#a855f7', glow: 'rgba(168,85,247,0.7)',  bg: 'rgba(109,40,217,0.18)', border: 'rgba(124,58,237,0.65)',
+  },
+];
