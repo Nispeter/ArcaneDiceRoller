@@ -44,6 +44,7 @@ function handleTermCommand(raw) {
       '/wmt             #Alias for /surge',
       '── Buff Generator ────────────────',
       '/spell           #Draw a random spell from 10 000 effects',
+      '/chaos           #d100 + surge + spell + wheel + 3 cards',
       '── Oracle ────────────────────────',
       '/oracle 1        #Draw 1 tarot card',
       '/oracle 3        #Draw 3 cards (Past · Present · Future)',
@@ -60,6 +61,7 @@ function handleTermCommand(raw) {
       '/pdmg &lt;n&gt; &lt;name&gt;     #Damage one member',
       '/pheal &lt;n&gt;            #Heal whole party',
       '/pheal &lt;n&gt; &lt;name&gt;    #Heal one member',
+      '/ptmp &lt;n&gt;              #Set temp HP whole party',
       '/ptmp &lt;n&gt; &lt;name&gt;     #Set temp HP',
       '/plist               #List party',
       '/pclear              #Clear party',
@@ -133,6 +135,37 @@ function handleTermCommand(raw) {
   // /spell
   if (/^\/spell$/i.test(cmd)) {
     termPrint(escHtml(randFrom(SPELLS)), 'winner');
+    return;
+  }
+
+  // /chaos — all at once
+  if (/^\/chaos$/i.test(cmd)) {
+    termPrint('🌀 ━━━ CHAOS UNLEASHED ━━━ 🌀', 'winner');
+
+    // d100 — use the dice card animation
+    const rolls = rollDice(1, 100);
+    const roll  = rolls[0];
+    showDiceResult(100, rolls, 0);
+    termPrint(`🎲 d100 → <strong>${roll}</strong>`, 'result');
+
+    // Wild Magic Surge
+    const idx = Math.floor((roll - 1) / 2);
+    const lo  = idx * 2 + 1;
+    termPrint(`⚡ Surge (${String(lo).padStart(2,'0')}–${String(lo+1).padStart(2,'0')}): ${escHtml(WILD_MAGIC[idx])}`, 'result');
+
+    // Spell
+    termPrint(`✨ Spell: ${escHtml(randFrom(SPELLS))}`, 'winner');
+
+    // Wheel (if populated)
+    if (wheelItems.length >= 2) {
+      termPrint('🎡 Spinning the wheel…', 'info');
+      spinWheel(winner => termPrint(`🎡 Wheel chose: <strong>${escHtml(winner)}</strong>`, 'winner'));
+    } else {
+      termPrint('🎡 Wheel empty — add items with /add', 'info');
+    }
+
+    // 3 tarot cards
+    drawTarot(3);
     return;
   }
 
@@ -278,16 +311,24 @@ function handleTermCommand(raw) {
     return;
   }
 
-  // /ptmp <n> <name>
-  const pTmpM = cmd.match(/^\/ptmp\s+(\d+)\s+(.+)$/i);
+  // /ptmp <n> [name]
+  const pTmpM = cmd.match(/^\/ptmp\s+(\d+)(?:\s+(.+))?$/i);
   if (pTmpM) {
     const amt  = Math.max(0, Math.min(9999, parseInt(pTmpM[1])));
-    const name = pTmpM[2].trim();
-    const m    = partyMembers.find(p => p.name.toLowerCase().startsWith(name.toLowerCase()));
-    if (!m) { termPrint(`✗ "${escHtml(name)}" not found.`, 'error'); return; }
-    m.tempHp = amt;
-    syncParty();
-    termPrint(`✦ ${escHtml(m.name)}: +${m.tempHp} temp HP`, 'result');
+    const name = pTmpM[2] ? pTmpM[2].trim() : null;
+    if (name) {
+      const m = partyMembers.find(p => p.name.toLowerCase().startsWith(name.toLowerCase()));
+      if (!m) { termPrint(`✗ "${escHtml(name)}" not found.`, 'error'); return; }
+      m.tempHp = amt;
+      syncParty();
+      termPrint(`✦ ${escHtml(m.name)}: +${m.tempHp} temp HP`, 'result');
+    } else {
+      if (partyMembers.length === 0) { termPrint('✗ No party members.', 'error'); return; }
+      partyMembers.forEach(m => { m.tempHp = amt; });
+      syncParty();
+      termPrint(`✦ Party: +${amt} temp HP.`, 'result');
+      partyMembers.forEach(m => termPrint(`  ${escHtml(m.name)}: +${m.tempHp} temp HP`, 'info'));
+    }
     return;
   }
 
