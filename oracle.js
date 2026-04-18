@@ -38,16 +38,13 @@ function createTarotCard(entry) {
   wrap.className = 'tarot-wrap';
   const card = document.createElement('div');
   card.className = 'tarot-card';
-  const bg       = hexToRgba(entry.color, 0.12);
-  const border   = hexToRgba(entry.color, 0.55);
-  const glow     = hexToRgba(entry.color, 0.65);
   const numLabel = entry.label ?? String(entry.num).padStart(2, '0');
   card.innerHTML = `
     <div class="tarot-face tarot-back"><span class="tarot-back-deco">✦</span></div>
-    <div class="tarot-face tarot-front" style="background:${bg};border-color:${border};box-shadow:inset 0 0 14px ${hexToRgba(entry.color, 0.12)}">
-      <span class="tarot-card-num" style="color:${entry.color}">${numLabel}</span>
-      <span class="tarot-card-symbol" style="color:${entry.color};filter:drop-shadow(0 0 6px ${glow})">${entry.symbol}</span>
-      <span class="tarot-card-name" style="color:${entry.color}">${entry.name}</span>
+    <div class="tarot-face tarot-front">
+      <span class="tarot-card-num">${numLabel}</span>
+      <span class="tarot-card-symbol">${entry.symbol}</span>
+      <span class="tarot-card-name">${entry.name}</span>
       ${entry.isRev ? '<span class="tarot-rev-badge">↓ rev</span>' : ''}
     </div>`;
   wrap.appendChild(card);
@@ -97,7 +94,7 @@ function drawTarot(count) {
       div.className = 'tarot-reading-entry';
       div.innerHTML = `
         ${LABELS[i] ? `<div class="tarot-reading-pos">${LABELS[i]}</div>` : ''}
-        <div class="tarot-reading-name" style="color:${entry.color}">
+        <div class="tarot-reading-name">
           ${entry.symbol} ${entry.name}
           ${entry.isRev ? '<span class="tarot-rev-badge">↓ Reversed</span>' : ''}
         </div>

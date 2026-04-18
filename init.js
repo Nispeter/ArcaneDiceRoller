@@ -2,21 +2,25 @@
    init.js — Stars background + panel toggles
 ════════════════════════════════════════════ */
 
+const THEMES = ['arcane', 'fey', 'ice', 'infernal'];
+
 function setTheme(theme) {
   document.body.className = document.body.className.replace(/\btheme-\S+/g, '').trim();
   if (theme !== 'arcane') document.body.classList.add(`theme-${theme}`);
-  document.querySelectorAll('.theme-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.theme === theme)
-  );
+  const wrap = document.getElementById('themeSliderWrap');
+  if (wrap) {
+    wrap.dataset.theme = theme;
+    document.getElementById('themeSlider').value = THEMES.indexOf(theme);
+  }
   localStorage.setItem('arcane-theme', theme);
 }
 
 (function initTheme() {
   const saved = localStorage.getItem('arcane-theme') || 'arcane';
   setTheme(saved);
-  document.querySelectorAll('.theme-btn').forEach(b =>
-    b.addEventListener('click', () => setTheme(b.dataset.theme))
-  );
+  document.getElementById('themeSlider').addEventListener('input', e => {
+    setTheme(THEMES[parseInt(e.target.value)]);
+  });
 })();
 
 (function spawnStars() {

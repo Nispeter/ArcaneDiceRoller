@@ -8,14 +8,22 @@ const CX     = canvas.width  / 2;
 const CY     = canvas.height / 2;
 const RADIUS = CX - 12;
 
-const WHEEL_COLORS = [
-  ['#5b21b6', '#a5b4fc'],
-  ['#0e7490', '#67e8f9'],
-  ['#7c3aed', '#ddd6fe'],
-  ['#0891b2', '#a5f3fc'],
-  ['#6d28d9', '#c4b5fd'],
-  ['#0369a1', '#bae6fd'],
-];
+function wheelHexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function getWheelColors() {
+  const s  = getComputedStyle(document.body);
+  const p  = s.getPropertyValue('--purple').trim();
+  const pl = s.getPropertyValue('--purple-light').trim();
+  const c  = s.getPropertyValue('--cyan').trim();
+  const cl = s.getPropertyValue('--cyan-light').trim();
+  const cp = s.getPropertyValue('--cyan-pale').trim();
+  return [[p,cp],[c,cp],[pl,cp],[cl,p],[p,cl],[c,pl]];
+}
 
 let wheelItems = [];
 let wheelAngle = -Math.PI / 2;
@@ -24,15 +32,22 @@ let spinning   = false;
 function drawWheel() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  const cs     = getComputedStyle(document.body);
+  const bg     = cs.getPropertyValue('--bg').trim();
+  const brd    = cs.getPropertyValue('--border').trim();
+  const td     = cs.getPropertyValue('--text-dim').trim();
+  const cl     = cs.getPropertyValue('--cyan-light').trim();
+  const COLORS = getWheelColors();
+
   if (wheelItems.length === 0) {
     ctx.beginPath();
     ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(59,29,110,0.35)';
+    ctx.fillStyle = wheelHexToRgba(brd, 0.35);
     ctx.fill();
-    ctx.strokeStyle = '#3b1d6e';
+    ctx.strokeStyle = brd;
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.fillStyle = '#8b6fae';
+    ctx.fillStyle = td;
     ctx.font = '14px "Share Tech Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -45,7 +60,7 @@ function drawWheel() {
 
   wheelItems.forEach((item, idx) => {
     const arc = (item.weight / total) * Math.PI * 2;
-    const [fill, textCol] = WHEEL_COLORS[idx % WHEEL_COLORS.length];
+    const [fill, textCol] = COLORS[idx % COLORS.length];
 
     ctx.beginPath();
     ctx.moveTo(CX, CY);
@@ -53,7 +68,7 @@ function drawWheel() {
     ctx.closePath();
     ctx.fillStyle = fill;
     ctx.fill();
-    ctx.strokeStyle = '#08001a';
+    ctx.strokeStyle = bg;
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -88,17 +103,17 @@ function drawWheel() {
   ctx.beginPath();
   ctx.arc(CX, CY, WHEEL_HUB_RADIUS, 0, Math.PI * 2);
   const hub = ctx.createRadialGradient(CX, CY, 2, CX, CY, WHEEL_HUB_RADIUS);
-  hub.addColorStop(0, '#22d3ee');
-  hub.addColorStop(1, '#08001a');
+  hub.addColorStop(0, cl);
+  hub.addColorStop(1, bg);
   ctx.fillStyle = hub;
   ctx.fill();
-  ctx.strokeStyle = '#22d3ee';
+  ctx.strokeStyle = cl;
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
   ctx.beginPath();
   ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(34,211,238,0.3)';
+  ctx.strokeStyle = wheelHexToRgba(cl, 0.3);
   ctx.lineWidth = 3;
   ctx.stroke();
 }

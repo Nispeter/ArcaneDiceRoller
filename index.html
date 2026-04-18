@@ -15,11 +15,16 @@
   <header>
     <h1 class="site-title">✦ Arcane Dice Roller ✦</h1>
     <p class="site-subtitle">Roll the weave of Fate</p>
-    <div class="theme-switcher" aria-label="Theme">
-      <button class="theme-btn active" data-theme="arcane">Arcane</button>
-      <button class="theme-btn"        data-theme="fey">Fey</button>
-      <button class="theme-btn"        data-theme="ice">Ice</button>
-      <button class="theme-btn"        data-theme="infernal">Infernal</button>
+    <div class="theme-slider-wrap" id="themeSliderWrap" data-theme="arcane">
+      <div class="theme-slider-col">
+        <input type="range" id="themeSlider" min="0" max="3" step="1" value="0" />
+        <div class="theme-ticks">
+          <span>Arcane</span>
+          <span>Fey</span>
+          <span>Ice</span>
+          <span>Infernal</span>
+        </div>
+      </div>
     </div>
 
     <nav class="panel-toggles" aria-label="Toggle panels">
