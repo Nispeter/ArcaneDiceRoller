@@ -42,7 +42,7 @@ function setTheme(theme) {
 })();
 
 (function initPanelToggles() {
-  const KEYS = ['dice', 'terminal', 'wheel', 'party', 'combat', 'tarot'];
+  const KEYS = ['dice', 'terminal', 'wheel', 'party', 'combat', 'tarot', 'timer'];
   let state;
   try { state = JSON.parse(localStorage.getItem('arcane-panels')); } catch {}
   if (!state) state = Object.fromEntries(KEYS.map(k => [k, true]));

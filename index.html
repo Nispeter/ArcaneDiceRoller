@@ -35,6 +35,7 @@
       <button class="panel-toggle-btn" data-panel="party">❤️ Party</button>
       <button class="panel-toggle-btn" data-panel="combat">⚔ Combat</button>
       <button class="panel-toggle-btn" data-panel="tarot">🔮 Oracle</button>
+      <button class="panel-toggle-btn" data-panel="timer">⏱ Timer</button>
     </nav>
   </header>
 
@@ -153,21 +154,6 @@
       <button id="wheelSpinBtn" class="spin-btn" disabled>✦ Spin the Wheel ✦</button>
     </section>
 
-    <!-- ── Party HP Tracker ── -->
-    <section class="panel hp-panel">
-      <h2 class="panel-title">Party Tracker</h2>
-
-      <div class="hp-add-form">
-        <input type="text"   id="hpName"   placeholder="Character name…" maxlength="24" />
-        <input type="number" id="hpMax"    placeholder="Max HP" min="1" max="9999" />
-        <button id="hpAddBtn">Add</button>
-      </div>
-
-      <div id="partyList" class="party-list"></div>
-
-      <button id="hpLongRestBtn" class="long-rest-btn" disabled>⚔ Long Rest ⚔</button>
-    </section>
-
     <!-- ── Initiative Combat Tracker ── -->
     <section class="panel combat-panel">
       <h2 class="panel-title">Initiative</h2>
@@ -215,6 +201,55 @@
       <div id="tarotReading" class="tarot-reading"></div>
     </section>
 
+    <!-- ── Timer / Countdown ── -->
+    <section class="panel timer-panel">
+      <h2 class="panel-title">The Sands</h2>
+
+      <div class="timer-section">
+        <div class="timer-section-label">⏱ Stopwatch</div>
+        <div class="timer-display" id="swDisplay">00:00.00</div>
+        <div class="timer-btns">
+          <button id="swStartBtn" class="timer-start-btn">▶ Start</button>
+          <button id="swResetBtn" class="timer-reset-btn">↺ Reset</button>
+        </div>
+      </div>
+
+      <div class="timer-divider"></div>
+
+      <div class="timer-section">
+        <div class="timer-section-label">⏳ Countdown</div>
+        <div class="timer-cd-inputs">
+          <input type="number" id="cdHours"   value="0" min="0" max="99" />
+          <span class="timer-unit">h</span>
+          <input type="number" id="cdMinutes" value="5" min="0" max="59" />
+          <span class="timer-unit">m</span>
+          <input type="number" id="cdSeconds" value="0" min="0" max="59" />
+          <span class="timer-unit">s</span>
+        </div>
+        <div class="timer-display" id="cdDisplay">05:00</div>
+        <div class="cd-progress-track"><div class="cd-progress-fill" id="cdProgressFill"></div></div>
+        <div class="timer-btns">
+          <button id="cdStartBtn" class="timer-start-btn">▶ Start</button>
+          <button id="cdResetBtn" class="timer-reset-btn">↺ Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Party HP Tracker ── -->
+    <section class="panel hp-panel">
+      <h2 class="panel-title">Party Tracker</h2>
+
+      <div class="hp-add-form">
+        <input type="text"   id="hpName"   placeholder="Character name…" maxlength="24" />
+        <input type="number" id="hpMax"    placeholder="Max HP" min="1" max="9999" />
+        <button id="hpAddBtn">Add</button>
+      </div>
+
+      <div id="partyList" class="party-list"></div>
+
+      <button id="hpLongRestBtn" class="long-rest-btn" disabled>⚔ Long Rest ⚔</button>
+    </section>
+
   </main>
 
   <script src="constants.js"></script>
@@ -227,6 +262,7 @@
   <script src="party.js"></script>
   <script src="combat.js"></script>
   <script src="oracle.js"></script>
+  <script src="timer.js"></script>
   <script src="terminal.js"></script>
 </body>
 </html>
