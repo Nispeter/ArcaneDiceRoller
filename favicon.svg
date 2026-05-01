@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="5" fill="#0d0025"/>
+  <!-- Outer d20 triangle -->
+  <path d="M16 2 L31 28 L1 28 Z"
+        fill="rgba(124,58,237,0.28)"
+        stroke="#7c3aed" stroke-width="1.8" stroke-linejoin="round"/>
+  <!-- Inner inverted triangle (the 20-face) -->
+  <path d="M9 17 L23 17 L16 28 Z"
+        fill="rgba(34,211,238,0.18)"
+        stroke="#22d3ee" stroke-width="1.2" stroke-linejoin="round"/>
+  <!-- Lines from top vertex to inner triangle corners -->
+  <line x1="16" y1="2"  x2="9"  y2="17" stroke="#22d3ee" stroke-width="0.9" opacity="0.65"/>
+  <line x1="16" y1="2"  x2="23" y2="17" stroke="#22d3ee" stroke-width="0.9" opacity="0.65"/>
+  <!-- Lines from bottom corners to inner triangle corners -->
+  <line x1="1"  y1="28" x2="9"  y2="17" stroke="#22d3ee" stroke-width="0.9" opacity="0.65"/>
+  <line x1="31" y1="28" x2="23" y2="17" stroke="#22d3ee" stroke-width="0.9" opacity="0.65"/>
+</svg>
