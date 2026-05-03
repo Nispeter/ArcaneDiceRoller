@@ -334,7 +334,7 @@ function applyInline(s) {
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g,
       '<a class="notes-link" href="$2" target="_blank" rel="noopener">$1</a>')
     // Clickable dice (after links so 1d20 inside [text](url) isn't double-wrapped)
-    .replace(/\b(\d{1,3}d(?:\d{1,4}|c)(?:[+-]\d{1,5})?)\b/gi,
+    .replace(/\b(\d{1,3}d(?:\d{1,4}|c)(?:[+-](?:\d{1,3}d(?:\d{1,4}|c)|\d{1,5}))*)\b/gi,
       '<a class="notes-dice" href="#" data-roll="$1">$1</a>');
 }
 

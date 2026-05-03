@@ -2,39 +2,52 @@
    prob.js — Dice Probability Viewer
 ════════════════════════════════════════════ */
 
-function computeDist(count, sides, modifier) {
-  let dp = [1];
-  for (let d = 0; d < count; d++) {
-    const next = new Array(dp.length + sides).fill(0);
-    for (let v = 0; v < dp.length; v++) {
-      if (!dp[v]) continue;
-      for (let f = 1; f <= sides; f++) next[v + f] += dp[v] / sides;
+// Exact distribution via convolution — supports compound expressions like 2d6+1d4+3
+function computeDistForExpr(parsed) {
+  let dp = { [parsed.modifier]: 1 };
+  for (const { count, sides, sign } of parsed.terms) {
+    if (sides === 'c') continue;
+    const c = Math.max(1, Math.min(50, count));
+    const s = Math.max(2, Math.min(1000, sides));
+    let groupDp = { 0: 1 };
+    for (let i = 0; i < c; i++) {
+      const next = {};
+      for (const [v, p] of Object.entries(groupDp)) {
+        for (let f = 1; f <= s; f++) {
+          const k = +v + f;
+          next[k] = (next[k] || 0) + p / s;
+        }
+      }
+      groupDp = next;
+    }
+    const next = {};
+    for (const [dv, dp2] of Object.entries(dp)) {
+      for (const [tv, tp] of Object.entries(groupDp)) {
+        const k = +dv + sign * +tv;
+        next[k] = (next[k] || 0) + dp2 * tp;
+      }
     }
     dp = next;
   }
-  const result = [];
-  for (let v = count; v <= count * sides; v++) result.push({ value: v + modifier, prob: dp[v] });
-  return result;
+  return Object.entries(dp)
+    .map(([v, p]) => ({ value: +v, prob: p }))
+    .sort((a, b) => a.value - b.value);
 }
 
 function renderProb() {
-  const raw      = document.getElementById('probInput').value.trim();
+  const raw       = document.getElementById('probInput').value.trim();
   const targetRaw = document.getElementById('probTarget').value.trim();
-  const statsEl  = document.getElementById('probStats');
-  const canvas   = document.getElementById('probCanvas');
+  const statsEl   = document.getElementById('probStats');
+  const canvas    = document.getElementById('probCanvas');
 
-  const m = raw.match(/^(\d{1,3})d(\d{1,4})([+-]\d{1,5})?$/i);
-  if (!m) {
-    if (raw) statsEl.textContent = 'Format: NdX  or  NdX+3';
+  const parsed = parseDiceExpr(raw);
+  if (!parsed || parsed.terms.every(t => t.sides === 'c')) {
+    if (raw) statsEl.innerHTML = '<span style="color:var(--text-dim);font-size:.75rem">Format: 1d20 · 2d6+3 · 1d20+1d6+2</span>';
     return;
   }
+  const target = targetRaw !== '' ? parseInt(targetRaw) : null;
 
-  const count    = Math.max(1, Math.min(50, parseInt(m[1])));
-  const sides    = Math.max(2, Math.min(1000, parseInt(m[2])));
-  const modifier = m[3] ? parseInt(m[3]) : 0;
-  const target   = targetRaw !== '' ? parseInt(targetRaw) : null;
-
-  const dist = computeDist(count, sides, modifier);
+  const dist = computeDistForExpr(parsed);
   if (!dist.length) return;
 
   const minV   = dist[0].value;
@@ -126,15 +139,14 @@ function renderProb() {
     ctx.fillText(maxV, PAD.left + (dist.length - 0.5) * barW, H - 5);
   }
 
-  renderProbStats(statsEl, minV, maxV, mean, hitPct, target, clrCyan);
+  renderProbStats(statsEl, minV, maxV, mean, hitPct, target);
 }
 
-function renderProbStats(el, minV, maxV, mean, hitPct, target, clrCyan) {
-  clrCyan = clrCyan || getComputedStyle(document.body).getPropertyValue('--cyan-light').trim() || '#22d3ee';
-  let html = `min <strong>${minV}</strong> · max <strong>${maxV}</strong> · mean <strong>${mean.toFixed(1)}</strong>`;
-  if (hitPct !== null) {
-    html += ` &nbsp;·&nbsp; ≥${target}: <strong style="color:${clrCyan}">${hitPct.toFixed(1)}%</strong>`;
-  }
+function renderProbStats(el, minV, maxV, mean, hitPct, target) {
+  const chip = (label, val, cls = '') =>
+    `<div class="prob-stat${cls}"><span class="prob-stat-label">${label}</span><span class="prob-stat-val">${val}</span></div>`;
+  let html = chip('min', minV) + chip('max', maxV) + chip('mean', mean.toFixed(1));
+  if (hitPct !== null) html += chip(`≥ ${target}`, hitPct.toFixed(1) + '%', ' prob-hit');
   el.innerHTML = html;
 }
 

@@ -14,7 +14,7 @@ function termPrint(text, cls = 'info') {
   termOutput.scrollTop = termOutput.scrollHeight;
 }
 
-const ROLL_RE = /^\/r(?:oll)?([ad])?\s+(\d{1,4})d(\d{1,5}|c)([+-]\d{1,6})?$/i;
+const ROLL_CMD_RE = /^\/r(?:oll)?([ad])?\s+(.+)$/i;
 
 const termHistory = [];
 let termHistIdx = -1;
@@ -33,12 +33,11 @@ function handleTermCommand(raw) {
  if (/^\/help$/i.test(cmd)) {
     [
       '── Dice Commands ─────────────────',
-      '/r &lt;NdX&gt;        #Roll N dice (X sides)',
-      '/r &lt;NdX+M&gt;      #Roll with modifier',
-      '/ra &lt;NdX&gt;       #Roll with advantage (take higher)',
-      '/rd &lt;NdX&gt;       #Roll with disadvantage (take lower)',
+      '/r &lt;expr&gt;        #Roll dice: 1d20  2d6+3  1d20+1d6+2',
+      '/ra &lt;expr&gt;       #Roll with advantage (take higher total)',
+      '/rd &lt;expr&gt;       #Roll with disadvantage (take lower total)',
       '/r &lt;Ndc&gt;        #Flip N coins (visual for ≤2)',
-      '/rx &lt;NdX&gt;        #Exploding dice (max = re-roll and add)',
+      '/rx &lt;NdX&gt;       #Exploding dice (max = re-roll and add)',
       '/roll /rolla /rolld  #Long-form aliases',
       '── Wild Magic ────────────────────',
       '/surge           #Roll on the Wild Magic Surge table',
@@ -86,43 +85,81 @@ function handleTermCommand(raw) {
     return;
   }
 
-  // /r /roll — dice roll
-  const rollM = cmd.match(ROLL_RE);
-  if (rollM) {
-    const modeChar  = rollM[1] ? rollM[1].toLowerCase() : null;
-    const mode      = modeChar === 'a' ? 'adv' : modeChar === 'd' ? 'dis' : 'normal';
-    const count     = Math.min(DICE_MAX, Math.max(1, parseInt(rollM[2])));
+  // /r /roll — dice roll (supports compound: 1d20+1d6+2)
+  const rollCmdM = cmd.match(ROLL_CMD_RE);
+  if (rollCmdM) {
+    const modeChar = rollCmdM[1] ? rollCmdM[1].toLowerCase() : null;
+    const mode     = modeChar === 'a' ? 'adv' : modeChar === 'd' ? 'dis' : 'normal';
+    const parsed   = parseDiceExpr(rollCmdM[2].trim());
 
-    if (rollM[3].toLowerCase() === 'c') {
-      termPrint(`🪙 Flipping ${count} coin${count > 1 ? 's' : ''}…`, 'info');
-      flipCoins(count);
+    if (!parsed) {
+      termPrint('Format: /r 1d20  or  /r 2d6+1d4+3', 'error');
       return;
     }
 
-    const sides     = Math.min(1000, Math.max(2, parseInt(rollM[3])));
-    const mod       = rollM[4] ? parseInt(rollM[4]) : 0;
-    const modStr    = mod > 0 ? ` + ${mod}` : mod < 0 ? ` - ${Math.abs(mod)}` : '';
+    // Coin-only expression
+    if (parsed.terms.length === 1 && parsed.terms[0].sides === 'c') {
+      const n = Math.min(DICE_MAX, parsed.terms[0].count);
+      termPrint(`🪙 Flipping ${n} coin${n > 1 ? 's' : ''}…`, 'info');
+      flipCoins(n);
+      return;
+    }
+
+    const diceTerms = parsed.terms.filter(t => t.sides !== 'c');
+    const label     = diceExprLabel({ terms: diceTerms, modifier: parsed.modifier });
     const modeLabel = mode === 'adv' ? ' with advantage' : mode === 'dis' ? ' with disadvantage' : '';
-    termPrint(`🎲 Rolling ${count}d${sides}${mod !== 0 ? (mod > 0 ? '+' + mod : mod) : ''}${modeLabel}…`, 'info');
+    termPrint(`🎲 Rolling ${label}${modeLabel}…`, 'info');
+
+    // Roll all groups, return { groups, total }
+    function rollAll() {
+      let total = parsed.modifier;
+      const groups = diceTerms.map(({ count, sides, sign }) => {
+        const c = Math.min(DICE_MAX, Math.max(1, count));
+        const s = Math.min(1000, Math.max(2, sides));
+        const rolls = rollDice(c, s);
+        const sum   = rolls.reduce((a, b) => a + b, 0);
+        total += sign * sum;
+        return { count: c, sides: s, sign, rolls, sum };
+      });
+      return { groups, total };
+    }
+
+    const simple   = diceTerms.length === 1;
+    const modStr   = parsed.modifier > 0 ? ` + ${parsed.modifier}` : parsed.modifier < 0 ? ` - ${Math.abs(parsed.modifier)}` : '';
 
     if (mode === 'normal') {
-      const rolls = rollDice(count, sides);
-      showDiceResult(sides, rolls, mod);
-      if (count <= DICE_DETAIL_MAX) termPrint(`[ ${rolls.join(' | ')} ]${modStr}`, 'rolls');
-      termPrint(`Total: <strong>${rolls.reduce((a, b) => a + b, 0) + mod}</strong>`, 'result');
-    } else {
-      const a = rollDice(count, sides), b = rollDice(count, sides);
-      const sa = a.reduce((x, y) => x + y, 0), sb = b.reduce((x, y) => x + y, 0);
-      const [chosen, other] = mode === 'adv' ? (sa >= sb ? [a, b] : [b, a]) : (sa <= sb ? [a, b] : [b, a]);
-      const cs = chosen.reduce((x, y) => x + y, 0);
-      showDiceResult(sides, chosen, mod, mode, other);
-      if (count <= DICE_DETAIL_MAX) {
-        termPrint(`Roll A: [ ${chosen.join(' | ')} ] = ${cs + mod} ✓`, 'rolls');
-        termPrint(`Roll B: [ ${other.join(' | ')} ] = ${other.reduce((x, y) => x + y, 0) + mod}`, 'rolls');
+      const { groups, total } = rollAll();
+      if (simple) {
+        const g = groups[0];
+        showDiceResult(g.sides, g.rolls, parsed.modifier);
+        if (g.count <= DICE_DETAIL_MAX) termPrint(`[ ${g.rolls.join(' | ')} ]${modStr}`, 'rolls');
       } else {
-        termPrint(`Roll A: ${cs + mod} ✓  Roll B: ${other.reduce((x, y) => x + y, 0) + mod}`, 'rolls');
+        groups.forEach(g => {
+          const pre = g.sign < 0 ? '−' : '';
+          if (g.count <= DICE_DETAIL_MAX) termPrint(`  ${pre}${g.count}d${g.sides}: [ ${g.rolls.join(' | ')} ] = ${g.sum}`, 'rolls');
+          else termPrint(`  ${pre}${g.count}d${g.sides}: ${g.sum}`, 'rolls');
+        });
+        if (parsed.modifier !== 0) termPrint(`  ${parsed.modifier > 0 ? '+' : ''}${parsed.modifier}`, 'rolls');
       }
-      termPrint(`Total: <strong>${cs + mod}</strong>`, 'result');
+      termPrint(`Total: <strong>${total}</strong>`, 'result');
+    } else {
+      const rA = rollAll(), rB = rollAll();
+      const [win, lose] = mode === 'adv'
+        ? (rA.total >= rB.total ? [rA, rB] : [rB, rA])
+        : (rA.total <= rB.total ? [rA, rB] : [rB, rA]);
+      if (simple) {
+        const gW = win.groups[0], gL = lose.groups[0];
+        showDiceResult(gW.sides, gW.rolls, parsed.modifier, mode, gL.rolls);
+        if (gW.count <= DICE_DETAIL_MAX) {
+          termPrint(`Roll A: [ ${gW.rolls.join(' | ')} ]${modStr} = ${win.total} ✓`, 'rolls');
+          termPrint(`Roll B: [ ${gL.rolls.join(' | ')} ]${modStr} = ${lose.total}`, 'rolls');
+        } else {
+          termPrint(`Roll A: ${win.total} ✓  Roll B: ${lose.total}`, 'rolls');
+        }
+      } else {
+        termPrint(`Roll A: ${win.total} ✓   Roll B: ${lose.total}`, 'rolls');
+      }
+      termPrint(`Total: <strong>${win.total}</strong>`, 'result');
     }
     return;
   }
