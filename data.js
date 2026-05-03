@@ -219,6 +219,83 @@ const SCENE_HOOKS = [
   'A clock marks the wrong hour. Everyone in the room ignores it',
 ];
 
+/* ── NPC Generator Data ── */
+const NPC_NAMES_HUMAN    = ['Aldric','Mira','Dane','Seraphine','Tobias','Lena','Garret','Vesna','Corvin','Aelys'];
+const NPC_NAMES_ELF      = ['Erevan','Sylara','Caladwen','Thalion','Ithilwen','Aerindel','Faeron','Nimloth'];
+const NPC_NAMES_DWARF    = ['Dugal','Thora','Bofri','Helga','Gorrim','Brynja','Aldun','Sigrid'];
+const NPC_NAMES_HALFLING = ['Milo','Rosie','Pip','Cora','Toblen','Nibs','Fenwick','Lila'];
+const NPC_NAMES_TIEFLING = ['Zariel','Mordecai','Sekhara','Vex','Riven','Calyx','Irae','Pyrax'];
+const NPC_NAMES_OTHER    = ['Krex','Shavi','Dorn','Tusk','Izara','Vorn','Grix','Nalara'];
+
+const NPC_RACE_POOL = [
+  { race: 'Human',    names: NPC_NAMES_HUMAN    },
+  { race: 'Elf',      names: NPC_NAMES_ELF      },
+  { race: 'Dwarf',    names: NPC_NAMES_DWARF    },
+  { race: 'Halfling', names: NPC_NAMES_HALFLING  },
+  { race: 'Tiefling', names: NPC_NAMES_TIEFLING  },
+  { race: 'Half-Orc', names: NPC_NAMES_OTHER    },
+  { race: 'Gnome',    names: NPC_NAMES_OTHER    },
+];
+
+const NPC_CLASSES = [
+  'Fighter','Wizard','Rogue','Cleric','Ranger','Paladin',
+  'Bard','Druid','Warlock','Monk','Barbarian','Sorcerer',
+  'Merchant','Guard','Innkeeper','Scholar','Farmer','Sailor',
+  'Blacksmith','Herbalist','Assassin','Spy','Cultist','Noble',
+];
+
+const NPC_IDEALS = [
+  'Power — the strong rule, the weak serve',
+  'Knowledge — understanding is its own reward',
+  'Freedom — no one should be caged by another\'s will',
+  'Community — we survive together or not at all',
+  'Redemption — every soul deserves a second chance',
+  'Honor — my word is iron',
+  'Ambition — greatness is built, not given',
+  'Justice — wrongs must be made right, whatever the cost',
+  'Survival — tomorrow matters more than today\'s principles',
+  'Beauty — the world deserves art, even in darkness',
+];
+
+const NPC_BONDS = [
+  'Searching for a sibling who vanished years ago',
+  'Owes a life-debt to a traveling stranger',
+  'Protecting a secret that would destroy their family\'s name',
+  'In love with someone they can never approach',
+  'Trying to buy back land stolen by a corrupt lord',
+  'Keeping a dying promise to their mentor',
+  'Guarding a relic they don\'t fully understand',
+  'Seeking the person who betrayed their guild',
+  'Raising a child alone after the war took everything',
+  'Loyal to a cause even as it crumbles around them',
+];
+
+const NPC_FLAWS = [
+  'Gambles away money they cannot afford to lose',
+  'Quick to take offense at perceived slights',
+  'Lies reflexively, even when truth would serve better',
+  'Cowardly when it truly matters',
+  'Cannot resist a secret — will pry at any cost',
+  'Holds grudges far longer than is healthy',
+  'Drinks to silence a memory',
+  'Dismissive of anyone not of their class',
+  'Overlooks red flags when offered flattery',
+  'Paralyzed by indecision under pressure',
+];
+
+const NPC_LOOKS = [
+  'A deep scar runs across the jaw',
+  'Eyes of two different colors',
+  'Missing the tip of the left ear',
+  'Ink-stained fingers that never seem clean',
+  'A nervous tic — blinks rapidly when lying',
+  'Elaborate tattoos visible at the collar and wrist',
+  'Always overdressed for the occasion',
+  'Hair prematurely white',
+  'Smells faintly of woodsmoke',
+  'Wears a ring that clearly does not fit',
+];
+
 /* ── D4 Fate Faces ── */
 const D4_FACES = [
   {
@@ -375,3 +452,95 @@ const TAROT_MINOR = (function () {
     }))
   );
 })();
+
+/* ── NPC Generator ── */
+const NPC_RACES = ['human', 'elf', 'dwarf', 'halfling', 'tiefling', 'orc', 'gnome'];
+
+const NPC_NAMES = {
+  human:    {
+    m:    ['Aldric','Bram','Cade','Davan','Eran','Finn','Gareth','Hollis','Ivan','Joren','Kade','Leoric','Nolan','Owen','Raef','Sander','Tomas','Ulric','Wren'],
+    f:    ['Alara','Bryn','Calla','Devra','Elara','Fern','Gwen','Hessa','Ilara','Jana','Kira','Lyra','Mira','Nara','Opal','Petra','Reva','Sara','Tara','Una'],
+    last: ['Ashwood','Blackthorn','Coldwater','Dawnhaven','Fairbrook','Fenwhistle','Greymoor','Holloway','Ironforge','Kestrel','Lightstone','Mossbridge','Nightfall','Oakhart','Pendleton','Proudmoor','Riverrun','Stormwall','Thorngate','Underwood','Whitfield'],
+  },
+  elf:      {
+    m:    ['Aelindra','Caladrel','Elathon','Faolin','Galanodel','Laucian','Quarion','Riardon','Soveliss','Thamior','Varis','Zilvara'],
+    f:    ['Adrie','Birel','Caelynn','Dara','Enna','Faral','Irann','Keyleth','Leshanna','Mialee','Quelenna','Thia','Valanthe'],
+    last: ['Brightleaf','Dawnwhisper','Embersong','Evenfall','Glimmerbrook','Goldenmane','Leafwhisper','Moonshadow','Nightbloom','Shadewarden','Silverwind','Starweave','Sunbrook','Willowmere','Windwhisper'],
+  },
+  dwarf:    {
+    m:    ['Adrik','Baern','Bromur','Dolgrin','Eberk','Fargrim','Harbek','Kildrak','Morgran','Orsik','Rurik','Taklinn','Thorin','Tordek','Ulfgar'],
+    f:    ['Amber','Artin','Audhild','Bardryn','Dagnal','Diesa','Eldeth','Falkrunn','Gunnloda','Helja','Kathra','Mardred','Riswynn','Torbera','Vistra'],
+    last: ['Axebreaker','Bronzepick','Copperforge','Deepdelve','Deeprock','Flintstone','Goldpick','Hammerfall','Ironmantle','Ironfist','Orebrow','Rockseam','Steelmantle','Stonehall','Thunderbeard'],
+  },
+  halfling: {
+    m:    ['Alton','Ander','Cade','Corrin','Errich','Finnan','Garret','Lindal','Merric','Milo','Osborn','Perrin','Reed','Roscoe','Wellby'],
+    f:    ['Andry','Bree','Callie','Cora','Euphemia','Jillian','Kithri','Lavinia','Lidda','Merla','Nedda','Portia','Seraphina','Trym','Wella'],
+    last: ['Brightwater','Brambletoes','Goodbarrel','Greenbottle','Highhill','Leagallow','Longtunnel','Merrymoor','Tealeaf','Tosscobble','Underfoot','Wobblewick'],
+  },
+  tiefling: {
+    m:    ['Akmenos','Amnon','Barakas','Damakos','Ekemon','Iados','Kairon','Leucis','Melech','Morthos','Pelaios','Skamos','Therai'],
+    f:    ['Akta','Anakis','Bryseis','Criella','Damaia','Ea','Kallista','Lerissa','Makaria','Nemeia','Orianna','Phelaia','Rieta'],
+    last: ['Ashblood','Ashenkind','Darkflame','Emberveil','Embersoul','Hellscar','Malasoul','Shadowborn','Shadowweave','Sinmark','Soulbane','Voidmark'],
+  },
+  orc:      {
+    m:    ['Drog','Grom','Gruk','Karg','Kor','Mog','Reth','Thag','Urk','Varg','Wark','Zug'],
+    f:    ['Gasha','Karga','Morga','Nura','Okra','Urga','Varka','Zarsha'],
+    last: ['Bloodtusk','Bonecrusher','Clanhammer','Crushrock','Eyegouger','Ironhide','Ironjaw','Marrowcrunch','Neckgrip','Scarface','Skullbreak','Stonefist','Wargrunt'],
+  },
+  gnome:    {
+    m:    ['Alston','Alvyn','Boddynock','Brocc','Burgell','Dimble','Fonkin','Gimble','Glim','Kellen','Namfoodle','Orryn','Roondar','Seebo','Zook'],
+    f:    ['Bimpnottin','Breena','Caramip','Carlin','Donella','Ella','Ellywick','Lilli','Lorilla','Nissa','Nyx','Orla','Roywyn','Tana','Zanna'],
+    last: ['Beren','Bumblefig','Clatterwick','Clumble','Crankspring','Daergel','Folkor','Garrick','Glimmerwick','Nackle','Ningel','Raulnor','Scheppen','Tinkertop','Timbers'],
+  },
+};
+
+const NPC_OCCUPATIONS = [
+  'blacksmith','innkeeper','merchant','town guard','scholar','healer','herbalist',
+  'cartographer','scribe','fletcher','apothecary','stablehand','fence','courier',
+  'fortune teller','butcher','moneylender','mason','shipwright','fisherman',
+  'traveling bard','gravedigger','leatherworker','glassblower','rat catcher',
+];
+
+const NPC_TRAITS = [
+  'speaks in a whisper no matter the situation',
+  'laughs at their own jokes before finishing them',
+  'constantly checks over their shoulder',
+  'refers to themselves in the third person',
+  'uses proverbs that never quite fit the moment',
+  'seems to know everyone by name but never explains how',
+  'asks deeply personal questions with no apparent awareness this is odd',
+  'pauses for exactly three seconds before responding to anything',
+  'cannot make eye contact but is otherwise very confident',
+  'finishes other people\'s sentences, always incorrectly',
+  'hums softly to themselves whenever nervous',
+  'has a strong opinion about everything and shares all of them',
+  'is unfailingly polite even when clearly furious',
+  'references "the old days" in every conversation',
+  'wears a single distinctive item they refuse to discuss',
+  'refuses all food or drink they haven\'t personally inspected',
+  'speaks in elaborate metaphors for the most mundane things',
+  'has a habit of going completely still mid-sentence',
+  'is visibly delighted by minor inconveniences that befall others',
+  'collects objects of one very specific type and becomes upset when asked why',
+];
+
+const NPC_SECRETS = [
+  'is hiding their true identity from a powerful organization',
+  'witnessed something they were never meant to see',
+  'owes a large debt to someone they have never met in person',
+  'is the last surviving member of a noble house',
+  'stole something precious years ago and has never returned it',
+  'is being blackmailed and has no intention of paying',
+  'knows the location of something very valuable and very cursed',
+  'has been lying about their expertise for years — successfully',
+  'serves a patron whose true nature they have not fully understood',
+  'is scouting this area for someone else entirely',
+  'once betrayed a close friend and constructed an elaborate justification for it',
+  'carries a message they already read and resealed',
+  'is not who they were introduced as',
+  'is looking for someone they claim not to know',
+  'has a second family in another city who knows nothing of the first',
+  'recently survived something they cannot explain and have told no one',
+  'is here on specific instructions they are pretending to have forgotten',
+  'has a buyer lined up for something they do not yet possess',
+];

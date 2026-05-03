@@ -37,6 +37,8 @@
       <button class="panel-toggle-btn" data-panel="combat">⚔ Combat</button>
       <button class="panel-toggle-btn" data-panel="tarot">🔮 Oracle</button>
       <button class="panel-toggle-btn" data-panel="timer">⏱ Timer</button>
+      <button class="panel-toggle-btn" data-panel="prob">📊 Prob</button>
+      <button class="panel-toggle-btn" data-panel="notes">📝 Notes</button>
     </nav>
   </header>
 
@@ -128,6 +130,8 @@
         <span data-cmd="/oracle 1">/oracle 1</span>
         <span data-cmd="/oracle 3">/oracle 3</span>
         <span data-cmd="/wlist">/wlist</span>
+        <span data-cmd="/npc">/npc</span>
+        <span data-cmd="/clearnotes">/clearnotes</span>
         <span data-cmd="/help">/help</span>
       </div>
     </section>
@@ -251,6 +255,48 @@
       <button id="hpLongRestBtn" class="long-rest-btn" disabled>⚔ Long Rest ⚔</button>
     </section>
 
+    <!-- ── Probability Viewer ── -->
+    <section class="panel prob-panel">
+      <h2 class="panel-title">Probability</h2>
+      <div class="prob-controls">
+        <input type="text"   id="probInput"  class="prob-input"  placeholder="1d20" maxlength="12" />
+        <span class="prob-vs">≥</span>
+        <input type="number" id="probTarget" class="prob-target" placeholder="DC" min="1" max="9999" />
+        <button id="probBtn" class="prob-btn">Compute</button>
+      </div>
+      <canvas id="probCanvas" class="prob-canvas"></canvas>
+      <div id="probStats" class="prob-stats"></div>
+    </section>
+
+    <!-- ── Session Notes ── -->
+    <section class="panel notes-panel">
+      <h2 class="panel-title">Notes</h2>
+      <div class="notes-toolbar">
+        <button id="notesStampBtn"   class="notes-action-btn" title="Insert timestamp">📌 Stamp</button>
+        <button id="notesCopyBtn"    class="notes-action-btn" title="Copy all">📋 Copy</button>
+        <button id="notesSaveBtn"    class="notes-action-btn" title="Export as .md">💾 Export</button>
+        <button id="notesLoadBtn"    class="notes-action-btn" title="Import .txt/.md">📂 Load</button>
+        <button id="notesSearchBtn"  class="notes-action-btn" title="Search">🔍 Find</button>
+        <button id="notesPreviewBtn" class="notes-action-btn" title="Preview">👁 Preview</button>
+        <button id="notesClearBtn"   class="notes-action-btn" title="Clear">🗑</button>
+      </div>
+      <input type="file" id="notesFileIn" accept=".txt,.md" style="display:none" />
+      <div id="notesSearchBar" class="notes-search-bar" style="display:none">
+        <input type="text" id="notesSearchInput" class="notes-search-input" placeholder="Search…" />
+        <button id="notesSearchPrev" class="notes-action-btn" title="Previous">▲</button>
+        <button id="notesSearchNext" class="notes-action-btn" title="Next">▼</button>
+        <span id="notesSearchStatus" class="notes-search-status"></span>
+      </div>
+      <textarea id="notesArea" class="notes-area"
+        placeholder="Session notes · **bold** · # Heading · - list · 2d6+3 to roll"
+        spellcheck="false"></textarea>
+      <div id="notesPreview" class="notes-preview" style="display:none"></div>
+      <div class="notes-footer">
+        <span id="notesCount" class="notes-count">0 chars</span>
+        <span id="notesSaved" class="notes-saved">autosaved ✓</span>
+      </div>
+    </section>
+
   </main>
 
   <script src="constants.js"></script>
@@ -264,6 +310,8 @@
   <script src="combat.js"></script>
   <script src="oracle.js"></script>
   <script src="timer.js"></script>
+  <script src="prob.js"></script>
+  <script src="notes.js"></script>
   <script src="terminal.js"></script>
 </body>
 </html>

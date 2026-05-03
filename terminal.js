@@ -77,6 +77,8 @@ function handleTermCommand(raw) {
       '/cclear              #Reset combat (keep party)',
       '── Other ─────────────────────────',
       '/scene           #Random setting · atmosphere · hook',
+      '/npc             #Generate a random NPC',
+      '/clearnotes      #Clear all session notes',
       '/theme &lt;name&gt;    #Switch theme: arcane fey ice infernal',
       '/clear           #Clear terminal',
       '/help            #Show this message',
@@ -186,6 +188,34 @@ function handleTermCommand(raw) {
     termPrint(`📍 <strong>Setting:</strong>    ${escHtml(randFrom(SCENE_SETTINGS))}`, 'result');
     termPrint(`🌫 <strong>Atmosphere:</strong> ${escHtml(randFrom(SCENE_ATMOSPHERES))}`, 'info');
     termPrint(`⚡ <strong>Hook:</strong>        ${escHtml(randFrom(SCENE_HOOKS))}`, 'winner');
+    return;
+  }
+
+  // /npc — random NPC
+  if (/^\/npc$/i.test(cmd)) {
+    if (typeof NPC_RACE_POOL === 'undefined') { termPrint('✗ NPC data missing — hard-refresh the page (Ctrl+Shift+R).', 'error'); return; }
+    const entry = randFrom(NPC_RACE_POOL);
+    const name  = randFrom(entry.names);
+    const cls   = randFrom(NPC_CLASSES);
+    termPrint('── NPC ───────────────────────────', 'info');
+    termPrint(`👤 <strong>${escHtml(name)}</strong>  <span style="opacity:.65">[${escHtml(entry.race)} · ${escHtml(cls)}]</span>`, 'result');
+    termPrint(`👁 <em>${escHtml(randFrom(NPC_LOOKS))}</em>`, 'info');
+    termPrint(`💬 ${escHtml(randFrom(NPC_TRAITS))}`, 'info');
+    termPrint(`⚖ <strong>Ideal:</strong> ${escHtml(randFrom(NPC_IDEALS))}`, 'result');
+    termPrint(`🔗 <strong>Bond:</strong>  ${escHtml(randFrom(NPC_BONDS))}`, 'info');
+    termPrint(`💀 <strong>Flaw:</strong>  ${escHtml(randFrom(NPC_FLAWS))}`, 'winner');
+    return;
+  }
+
+  // /clearnotes — wipe session notes
+  if (/^\/clearnotes$/i.test(cmd)) {
+    const ta = document.getElementById('notesArea');
+    if (!ta || !ta.value) { termPrint('Notes are already empty.', 'info'); return; }
+    ta.value = '';
+    localStorage.removeItem('arcane-notes');
+    if (typeof updateNotesCount === 'function') updateNotesCount();
+    if (typeof renderPreview   === 'function') renderPreview();
+    termPrint('✓ Session notes cleared.', 'result');
     return;
   }
 

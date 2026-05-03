@@ -42,7 +42,7 @@ function setTheme(theme) {
 })();
 
 (function initPanelToggles() {
-  const KEYS = ['dice', 'terminal', 'wheel', 'party', 'combat', 'tarot', 'timer'];
+  const KEYS = ['dice', 'terminal', 'wheel', 'party', 'combat', 'tarot', 'timer', 'prob', 'notes'];
   let state;
   try { state = JSON.parse(localStorage.getItem('arcane-panels')); } catch {}
   if (!state) state = Object.fromEntries(KEYS.map(k => [k, true]));
@@ -50,8 +50,9 @@ function setTheme(theme) {
   function apply() {
     KEYS.forEach(key => {
       const sel = key === 'party' ? '.hp-panel' : key === 'tarot' ? '.tarot-panel' : key === 'combat' ? '.combat-panel' : `.${key}-panel`;
-      document.querySelector(sel).classList.toggle('panel-hidden', !state[key]);
-      document.querySelector(`[data-panel="${key}"]`).classList.toggle('active', !!state[key]);
+      const visible = state[key] === undefined ? true : !!state[key];
+      document.querySelector(sel).classList.toggle('panel-hidden', !visible);
+      document.querySelector(`[data-panel="${key}"]`).classList.toggle('active', visible);
     });
     localStorage.setItem('arcane-panels', JSON.stringify(state));
   }
