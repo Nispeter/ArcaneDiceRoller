@@ -46,10 +46,11 @@ function handleTermCommand(raw) {
       '/spell           #Draw a random spell from 10 000 effects',
       '/chaos           #d100 + surge + spell + wheel + 3 cards',
       '── Oracle ────────────────────────',
-      '/oracle 1        #Draw 1 tarot card',
+      '/oracle 1        #Draw 1 card',
       '/oracle 3        #Draw 3 cards (Past · Present · Future)',
       '/oracle major    #Switch to 22-card Major Arcana deck',
       '/oracle full     #Switch to full 78-card deck',
+      '/oracle domt     #Switch to Deck of Many Things (22 cards)',
       '── Wheel Commands ────────────────',
       '/add &lt;name&gt; [w]  #Add item to wheel (w = weight)',
       '/spin            #Spin the wheel',
@@ -290,8 +291,8 @@ function handleTermCommand(raw) {
   // /oracle
   const oracleN = cmd.match(/^\/oracle\s+([13])$/i);
   if (oracleN) { drawTarot(parseInt(oracleN[1])); return; }
-  const oracleM = cmd.match(/^\/oracle\s+(full|major)$/i);
-  if (oracleM) { setTarotMode(oracleM[1].toLowerCase() === 'full' ? 'full' : 'major'); return; }
+  const oracleM = cmd.match(/^\/oracle\s+(full|major|domt)$/i);
+  if (oracleM) { setTarotMode(oracleM[1].toLowerCase()); return; }
 
   // /add — wheel item
   const addM = cmd.match(/^\/add\s+(.+?)(?:\s+(\d+(?:\.\d+)?))?$/i);

@@ -13,8 +13,12 @@ function hexToRgba(hex, alpha) {
 }
 
 function shuffleTarot() {
-  const source = tarotMode === 'full' ? [...TAROT, ...TAROT_MINOR] : TAROT;
-  tarotDeck = source.map(c => ({ ...c, isRev: Math.random() < 0.3 }));
+  let source;
+  if      (tarotMode === 'full') source = [...TAROT, ...TAROT_MINOR];
+  else if (tarotMode === 'domt') source = DOMT;
+  else                           source = TAROT;
+  const noRev = tarotMode === 'domt';
+  tarotDeck = source.map(c => ({ ...c, isRev: noRev ? false : Math.random() < 0.3 }));
   for (let i = tarotDeck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [tarotDeck[i], tarotDeck[j]] = [tarotDeck[j], tarotDeck[i]];
@@ -26,11 +30,12 @@ function setTarotMode(mode) {
   tarotMode = mode;
   const wrap = document.getElementById('deckSliderWrap');
   wrap.dataset.mode = mode;
-  document.getElementById('deckSlider').value = mode === 'full' ? '1' : '0';
+  document.getElementById('deckSlider').value = mode === 'full' ? '1' : mode === 'domt' ? '2' : '0';
   shuffleTarot();
   document.getElementById('tarotSpread').innerHTML  = '';
   document.getElementById('tarotReading').innerHTML = '';
-  termPrint(`✦ Oracle deck: ${mode === 'full' ? '78 cards (full deck)' : '22 cards (Major Arcana)'}`, 'info');
+  const label = { major: '22 cards · Major Arcana', full: '78 cards · Full Tarot', domt: '22 cards · Deck of Many Things' };
+  termPrint(`✦ Oracle deck: ${label[mode] ?? mode}`, 'info');
 }
 
 function createTarotCard(entry) {
@@ -116,7 +121,7 @@ document.getElementById('tarotShuffleBtn').addEventListener('click', () => {
 });
 
 document.getElementById('deckSlider').addEventListener('input', e => {
-  setTarotMode(e.target.value === '1' ? 'full' : 'major');
+  setTarotMode(['major', 'full', 'domt'][parseInt(e.target.value)] ?? 'major');
 });
 
 shuffleTarot();

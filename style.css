@@ -1812,7 +1812,7 @@ body.theme-bloom    .tarot-back-deco { color: rgba(219,39,119,0.3); }
 .prob-target { width: 68px; font-family: 'Share Tech Mono', monospace; }
 .prob-vs     { color: var(--text-dim); font-size: .85rem; }
 .prob-btn    { padding: 5px 12px; }
-.prob-canvas { display: block; width: 100%; height: 160px; border-radius: 4px; }
+.prob-canvas { display: block; width: 100%; max-width: 600px; height: 200px; margin: 0 auto; border-radius: 6px; }
 .prob-stats  { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; min-height: 1.2em; }
 .prob-stat {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
