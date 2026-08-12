@@ -1,34 +1,35 @@
 /* ════════════════════════════════════════════
-   guesswho-data.js — Roster de personajes
-   Fuente por defecto del módulo Masquerade.
-   Se puede reemplazar en vivo con 📂 Importar
-   (queda guardado en localStorage y pisa a este
-   archivo hasta que se importe otro o se resetee).
+   guesswho-data.js — Character roster
+   Default source for the Masquerade module.
+   Can be swapped at runtime with ⤓ Import
+   (that copy lives in localStorage and shadows
+   this file until another one is imported).
 ════════════════════════════════════════════ */
 
-/*  Campos:
-      id          identificador único, no cambiarlo una vez asignado
-      jugador     quién lo juega
-      personaje   nombre que se muestra en la carta
-      raza        especie base
-      subespecie  sub-especie / linaje
-      clase       clases y subclases, tal cual la planilla
-      faccion     gremio o pacto
-      estado      vacío = vivo y activo. Si no: 'Muerto', 'Muerta',
-                  'Muerta eternamente', 'Desaparecido', 'Traidora'…
-                  Se puede preguntar por él y sale con ☠/?/⚑ en la carta
-      descripcion 1-2 frases de aspecto físico — pista extra para el juego
-      lore        trasfondo, se muestra sólo al revelar la ficha
-      imagen      ruta relativa al retrato, ej. 'guess_who/thumbs/Bolverk.webp'
-                  si está vacía o falla la carga se dibuja la inicial
+/*  Fields (keys stay in Spanish so rosters exported earlier still import):
+      id          unique identifier, never change it once assigned
+      jugador     player — who runs the character
+      personaje   character — the name shown on the card
+      raza        race / base species
+      subespecie  subrace / bloodline
+      clase       classes and subclasses, verbatim from the spreadsheet
+      faccion     guild or pact
+      estado      status. Empty = alive and active. Otherwise anything
+                  containing dead/muert, missing/desaparec or traitor/traidor
+                  is grouped under that category for questions, and shows
+                  ☠ / ? / ⚑ on the card. The sheet prints the raw text.
+      descripcion 1-2 lines on physical appearance — the extra in-game clue
+      lore        backstory, only shown when the sheet is opened
+      imagen      relative path to the portrait, e.g. 'guess_who/thumbs/Bolverk.webp'
+                  if empty or it fails to load, the initial is drawn instead
 
-    descripcion y lore vienen vacíos: la planilla no los tenía.
-    Se pueden llenar acá a mano o vía 💾 Exportar → editar → 📂 Importar.
+    descripcion and lore ship empty: the spreadsheet had no such column.
+    Fill them here by hand, or via 💾 Export → edit → ⤓ Import.
 
-    Los retratos apuntan a guess_who/thumbs/ (webp de 420px, ~0.8 MB en total).
-    Los originales siguen intactos en guess_who/. Si agregás fotos nuevas:
-    poné el original en guess_who/, apuntá 'imagen' ahí, y corré
-    `python guesswho_thumbs.py` — regenera las miniaturas y reapunta este archivo.  */
+    Portraits point at guess_who/thumbs/ (420px webp, ~0.9 MB total). The
+    originals stay untouched in guess_who/. To add or replace a photo: drop the
+    original in guess_who/, point 'imagen' at it, and run
+    `python guesswho_thumbs.py` — it rebuilds stale thumbs and repoints this file.  */
 
 const GUESS_WHO = [
 
@@ -125,7 +126,7 @@ const GUESS_WHO = [
     subespecie: "Sunerin't",
     clase: 'Arcane Trickster | Way of the Twin Blades Sculptor',
     faccion: 'Ninguno',
-    estado: 'Desaparecido',
+    estado: 'Missing',
     descripcion: '',
     lore: '',
     imagen: 'guess_who/thumbs/dux.webp',
@@ -194,7 +195,7 @@ const GUESS_WHO = [
     subespecie: 'Semi—Diosa',
     clase: 'Clerigo | Mago',
     faccion: 'Ninguno',
-    estado: 'Traidora',
+    estado: 'Traitor',
     descripcion: '',
     lore: '',
     imagen: 'guess_who/thumbs/Eevona.webp',
@@ -250,7 +251,7 @@ const GUESS_WHO = [
     subespecie: 'Hijo de Munimen',
     clase: 'Paladin of Munimen',
     faccion: 'Ninguno',
-    estado: 'Desaparecido',
+    estado: 'Missing',
     descripcion: '',
     lore: '',
     imagen: 'guess_who/thumbs/Edrik.webp',
@@ -306,7 +307,7 @@ const GUESS_WHO = [
     subespecie: '',
     clase: 'Fighter',
     faccion: 'Rangers Caelestis',
-    estado: 'Muerta',
+    estado: 'Dead',
     descripcion: '',
     lore: '',
     imagen: 'guess_who/thumbs/Rider.webp',
@@ -498,7 +499,7 @@ const GUESS_WHO = [
     subespecie: '',
     clase: 'Way of the Open Hand Monk',
     faccion: 'Ninguno',
-    estado: 'Muerto',
+    estado: 'Dead',
     descripcion: '',
     lore: '',
     imagen: 'guess_who/thumbs/Hrungnir.webp',
@@ -541,7 +542,7 @@ const GUESS_WHO = [
     subespecie: 'A Perfect Human',
     clase: 'Druid | Cleric',
     faccion: 'Cámara del Eco',
-    estado: 'Muerta eternamente',
+    estado: 'Eternally dead',
     descripcion: '',
     lore: '',
     imagen: 'guess_who/thumbs/laekna_2.webp',
@@ -626,7 +627,7 @@ const GUESS_WHO = [
     subespecie: '',
     clase: '',
     faccion: '',
-    estado: 'Muerto',
+    estado: 'Dead',
     descripcion: '',
     lore: '',
     imagen: 'guess_who/thumbs/kropp.webp',

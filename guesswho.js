@@ -1,14 +1,14 @@
 /* ════════════════════════════════════════════
    guesswho.js — Masquerade
-   Personaje secreto · descarte manual y por
-   atributo · fichas · roster importable
+   Secret character · manual & attribute-based
+   elimination · character sheets · JSON roster
 ════════════════════════════════════════════ */
 
 const GW_STATE_KEY  = 'arcane-guesswho';
 const GW_ROSTER_KEY = 'arcane-guesswho-roster';
 const GW_HISTORY_MAX = 60;
 
-// Clases base que se ofrecen como pregunta; sólo aparecen las presentes en el roster
+// Base classes offered as questions; only those present in the roster show up
 const GW_CLASS_KEYWORDS = [
   'Artificer', 'Barbarian', 'Bard', 'Blacksmith', 'Champion', 'Cleric', 'Clerigo',
   'Druid', 'Fighter', 'Gunslinger', 'Inquisidor', 'Jeager', 'Mago', 'Merchant',
@@ -16,29 +16,31 @@ const GW_CLASS_KEYWORDS = [
 ];
 
 const GW_FIELD_LABELS = {
-  raza: 'Raza', subespecie: 'Sub-especie', clase: 'Clase',
-  faccion: 'Facción', jugador: 'Jugador', estado: 'Estado',
+  raza: 'Race', subespecie: 'Subrace', clase: 'Class',
+  faccion: 'Faction', jugador: 'Player', estado: 'Status',
 };
 
-// Categorías de estado: la ficha muestra el texto tal cual ('Muerta eternamente'),
-// pero para preguntar se agrupan — Muerto / Muerta / Muerta eternamente son lo mismo.
-const GW_ESTADOS = [
-  { frag: 'muert',     cat: 'Muerto',       icon: '☠' },
-  { frag: 'desaparec', cat: 'Desaparecido', icon: '?' },
-  { frag: 'traidor',   cat: 'Traidor',      icon: '⚑' },
+// Status buckets. The sheet prints the raw text ('Muerta eternamente'), but
+// questions group it: dead/muerto/muerta/muerta eternamente all answer the same.
+// Both language stems are matched so roster text can be written either way.
+const GW_STATUSES = [
+  { frags: ['muert', 'dead'],           cat: 'Dead',    icon: '☠' },
+  { frags: ['desaparec', 'missing'],    cat: 'Missing', icon: '?' },
+  { frags: ['traidor', 'traitor'],      cat: 'Traitor', icon: '⚑' },
 ];
 
-function gwEstadoInfo(estado) {
+function gwStatusInfo(estado) {
   const e = estado.toLowerCase();
-  return GW_ESTADOS.find(x => e.includes(x.frag)) || { cat: estado, icon: '✦' };
+  return GW_STATUSES.find(x => x.frags.some(f => e.includes(f)))
+      || { cat: estado, icon: '✦' };
 }
 
-// Glifo de la insignia; vacío = vivo y activo, sin insignia
-function gwEstadoIcon(estado) {
-  return gwEstadoInfo(estado).icon;
+// Badge glyph; empty status = alive and active, no badge
+function gwStatusIcon(estado) {
+  return gwStatusInfo(estado).icon;
 }
 
-// ── Datos ────────────────────────────────────
+// ── Data ─────────────────────────────────────
 
 const GW_DIACRITICS = new RegExp('[\\u0300-\\u036f]', 'g');
 
@@ -47,7 +49,7 @@ function gwSlug(s) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-// Color de acento estable, derivado del nombre
+// Stable accent colour derived from the name
 function gwAccent(name) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
@@ -55,7 +57,7 @@ function gwAccent(name) {
 }
 
 function gwCharDefaults(c, i) {
-  const personaje = String(c.personaje ?? '').trim() || `Personaje ${i + 1}`;
+  const personaje = String(c.personaje ?? '').trim() || `Character ${i + 1}`;
   return {
     jugador: '', raza: '', subespecie: '', clase: '',
     faccion: '', estado: '', descripcion: '', lore: '', imagen: '',
@@ -91,11 +93,11 @@ function gwSaveState() {
 let gwRoster = gwLoadRoster();
 const gwInitial = gwLoadState();
 let gwSecretId = gwInitial.secretId;
-let gwOut      = gwInitial.out;      // ids descartados
-let gwHistory  = [];                 // snapshots de gwOut para deshacer
-let gwRevealed = false;              // nunca se persiste: un refresh siempre oculta el secreto
+let gwOut      = gwInitial.out;      // eliminated ids
+let gwHistory  = [];                 // gwOut snapshots, for undo
+let gwRevealed = false;              // never persisted: a refresh always re-hides the secret
 
-// ── Refs DOM ─────────────────────────────────
+// ── DOM refs ─────────────────────────────────
 
 const gwGridEl     = document.getElementById('gwGrid');
 const gwStatusEl   = document.getElementById('gwStatus');
@@ -136,14 +138,14 @@ function gwRenderGrid() {
     const card = document.createElement('div');
     card.className = 'gw-card' + (gwOut.has(c.id) ? ' out' : '');
     card.style.setProperty('--gw-accent', gwAccent(c.personaje));
-    card.title = `${c.personaje} — clic para descartar`;
+    card.title = `${c.personaje} — click to eliminate`;
     const badge = c.estado
-      ? `<span class="gw-badge" title="${escHtml(c.estado)}">${gwEstadoIcon(c.estado)}</span>`
+      ? `<span class="gw-badge" title="${escHtml(c.estado)}">${gwStatusIcon(c.estado)}</span>`
       : '';
     card.innerHTML = `
       ${gwThumb(c, 'gw-thumb')}${badge}
       <span class="gw-card-name">${escHtml(c.personaje)}</span>
-      <button class="gw-info-btn" title="Ver ficha">i</button>`;
+      <button class="gw-info-btn" title="View sheet">i</button>`;
 
     card.addEventListener('click', () => {
       gwPushHistory();
@@ -164,15 +166,13 @@ function gwRenderGrid() {
 function gwRenderStatus() {
   const alive = gwRoster.length - gwOut.size;
   if (!gwSecretId) {
-    gwStatusEl.innerHTML = `<span class="gw-status-dim">Sin partida — dale a 🎲 Nueva partida</span>
-                            <span class="gw-status-count">${gwRoster.length} personajes</span>`;
+    gwStatusEl.innerHTML = `<span class="gw-status-dim">No game yet — hit 🎲 New Game</span>
+                            <span class="gw-status-count">${gwRoster.length} characters</span>`;
     return;
   }
-  const secretOut = gwOut.has(gwSecretId);
   gwStatusEl.innerHTML = `
-    <span class="gw-status-count"><strong>${alive}</strong> de ${gwRoster.length} en pie</span>
-    ${alive === 1 ? '<span class="gw-status-hint">¡Queda uno! 🎯</span>' : ''}
-    ${secretOut ? '<span class="gw-status-warn">⚠ descartaste tu propio personaje</span>' : ''}`;
+    <span class="gw-status-count"><strong>${alive}</strong> of ${gwRoster.length} standing</span>
+    ${alive === 1 ? '<span class="gw-status-hint">One left! 🎯</span>' : ''}`;
 }
 
 function gwRenderSecret() {
@@ -183,7 +183,7 @@ function gwRenderSecret() {
   gwSecretEl.innerHTML = `
     ${gwThumb(c, 'gw-secret-thumb')}
     <div class="gw-secret-body">
-      <div class="gw-secret-label">Tu personaje</div>
+      <div class="gw-secret-label">Your character</div>
       <div class="gw-secret-name" style="color:${gwAccent(c.personaje)}">${escHtml(c.personaje)}</div>
       ${gwMetaRows(c)}
     </div>`;
@@ -191,11 +191,11 @@ function gwRenderSecret() {
 
 function gwMetaRows(c) {
   const rows = [
-    ['Jugador', c.jugador],
-    ['Raza', [c.raza, c.subespecie].filter(Boolean).join(' · ')],
-    ['Clase', c.clase],
-    ['Facción', c.faccion],
-    ['Estado', c.estado && `${gwEstadoIcon(c.estado)} ${c.estado}`],
+    ['Player', c.jugador],
+    ['Race', [c.raza, c.subespecie].filter(Boolean).join(' · ')],
+    ['Class', c.clase],
+    ['Faction', c.faccion],
+    ['Status', c.estado && `${gwStatusIcon(c.estado)} ${c.estado}`],
   ].filter(([, v]) => v);
   return rows.map(([k, v]) =>
     `<div class="gw-meta"><span class="gw-meta-k">${k}</span><span class="gw-meta-v">${escHtml(v)}</span></div>`
@@ -208,14 +208,14 @@ function gwRender() {
   gwRenderSecret();
 }
 
-// ── Ficha ────────────────────────────────────
+// ── Character sheet ──────────────────────────
 
 function gwShowDetail(id) {
   const c = gwById(id);
   if (!c) return;
   gwDetailEl.style.display = '';
   gwDetailEl.innerHTML = `
-    <button class="gw-detail-close" title="Cerrar">✕</button>
+    <button class="gw-detail-close" title="Close">✕</button>
     ${gwThumb(c, 'gw-detail-thumb')}
     <div class="gw-detail-body">
       <div class="gw-detail-name" style="color:${gwAccent(c.personaje)}">${escHtml(c.personaje)}</div>
@@ -223,7 +223,7 @@ function gwShowDetail(id) {
       ${c.descripcion ? `<p class="gw-detail-desc">${escHtml(c.descripcion)}</p>` : ''}
       ${c.lore ? `<p class="gw-detail-lore">${escHtml(c.lore)}</p>` : ''}
       <div class="gw-detail-actions">
-        <button class="gw-action-btn gw-primary gw-guess-btn">🎯 Adivinar que es este</button>
+        <button class="gw-action-btn gw-primary gw-guess-btn">🎯 Guess this one</button>
       </div>
     </div>`;
 
@@ -241,32 +241,32 @@ function gwGuess(id) {
   const c = gwById(id);
   if (!c) return;
   if (!gwSecretId) {
-    gwTerm('✗ Masquerade: no hay partida en curso. Usá /gw o 🎲 Nueva partida.', 'error');
+    gwTerm('✗ Masquerade: no game in progress — try /gw or 🎲 New Game.', 'error');
     return;
   }
   const win = id === gwSecretId;
   const secret = gwById(gwSecretId);
   gwDetailEl.innerHTML = `
     <div class="gw-verdict ${win ? 'gw-win' : 'gw-lose'}">
-      <div class="gw-verdict-title">${win ? '✦ ¡Correcto! ✦' : '✗ No era'}</div>
+      <div class="gw-verdict-title">${win ? '✦ Correct! ✦' : '✗ Not them'}</div>
       <div class="gw-verdict-body">
         ${win
-          ? `Era <strong>${escHtml(c.personaje)}</strong>.`
-          : `Elegiste <strong>${escHtml(c.personaje)}</strong> — el secreto era <strong>${escHtml(secret ? secret.personaje : '???')}</strong>.`}
+          ? `It was <strong>${escHtml(c.personaje)}</strong>.`
+          : `You picked <strong>${escHtml(c.personaje)}</strong> — the secret was <strong>${escHtml(secret ? secret.personaje : '???')}</strong>.`}
       </div>
-      <button class="gw-action-btn gw-primary gw-verdict-again">🎲 Otra partida</button>
+      <button class="gw-action-btn gw-primary gw-verdict-again">🎲 Play again</button>
     </div>`;
   gwDetailEl.querySelector('.gw-verdict-again').addEventListener('click', () => { gwHideDetail(); gwNewGame(); });
   gwTerm(win
-    ? `🎭 Masquerade: acertaste — era ${escHtml(c.personaje)}.`
-    : `🎭 Masquerade: fallaste — era ${escHtml(secret ? secret.personaje : '???')}.`,
+    ? `🎭 Masquerade: correct — it was ${escHtml(c.personaje)}.`
+    : `🎭 Masquerade: wrong — it was ${escHtml(secret ? secret.personaje : '???')}.`,
     win ? 'winner' : 'error');
 }
 
-// ── Partida ──────────────────────────────────
+// ── Game flow ────────────────────────────────
 
 function gwNewGame() {
-  if (!gwRoster.length) { gwTerm('✗ Masquerade: el roster está vacío.', 'error'); return; }
+  if (!gwRoster.length) { gwTerm('✗ Masquerade: the roster is empty.', 'error'); return; }
   gwSecretId = gwRoster[Math.floor(Math.random() * gwRoster.length)].id;
   gwOut.clear();
   gwHistory = [];
@@ -274,7 +274,7 @@ function gwNewGame() {
   gwHideDetail();
   gwSaveState();
   gwRender();
-  gwTerm(`🎭 Masquerade: personaje secreto asignado (${gwRoster.length} en el tablero).`, 'info');
+  gwTerm(`🎭 Masquerade: secret character assigned (${gwRoster.length} on the board).`, 'info');
 }
 
 function gwResetBoard() {
@@ -292,22 +292,22 @@ function gwUndo() {
 }
 
 function gwToggleReveal() {
-  if (!gwSecretId) { gwTerm('✗ Masquerade: no hay partida en curso.', 'error'); return; }
+  if (!gwSecretId) { gwTerm('✗ Masquerade: no game in progress.', 'error'); return; }
   gwRevealed = !gwRevealed;
   gwRenderSecret();
 }
 
-// ── Preguntas por atributo ───────────────────
+// ── Attribute questions ──────────────────────
 
 function gwValuesFor(field) {
   if (field === 'clase') return gwClassValues();
   const raw = gwRoster.map(c => c[field]).filter(Boolean);
-  const vals = field === 'estado' ? raw.map(e => gwEstadoInfo(e).cat) : raw;
+  const vals = field === 'estado' ? raw.map(e => gwStatusInfo(e).cat) : raw;
   return [...new Set(vals)].sort((a, b) => a.localeCompare(b, 'es'));
 }
 
-// Clases base presentes + un token de rescate para quien no calce con ninguna
-// (p.ej. "Arcane Trickster"), así ningún personaje queda sin pregunta posible.
+// Base classes present, plus a fallback token for anyone matching none
+// (e.g. "Arcane Trickster"), so no character is left unquestionable.
 function gwClassValues() {
   const values = GW_CLASS_KEYWORDS.filter(k =>
     gwRoster.some(c => c.clase.toLowerCase().includes(k.toLowerCase()))
@@ -323,7 +323,7 @@ function gwClassValues() {
 
 function gwMatches(c, field, value) {
   if (field === 'clase')  return c.clase.toLowerCase().includes(value.toLowerCase());
-  if (field === 'estado') return !!c.estado && gwEstadoInfo(c.estado).cat === value;
+  if (field === 'estado') return !!c.estado && gwStatusInfo(c.estado).cat === value;
   return c[field] === value;
 }
 
@@ -332,7 +332,7 @@ function gwFillValues() {
   const values = gwValuesFor(field);
   gwAskValueEl.innerHTML = values.length
     ? values.map(v => `<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('')
-    : '<option value="">— sin datos —</option>';
+    : '<option value="">— no data —</option>';
   gwAskValueEl.disabled = !values.length;
 }
 
@@ -349,10 +349,10 @@ function gwAsk(isYes) {
   });
   gwSaveState();
   gwRender();
-  gwTerm(`🕵 ¿${GW_FIELD_LABELS[field]} = ${escHtml(value)}? → ${isYes ? 'Sí' : 'No'} · ${hit} descartado${hit === 1 ? '' : 's'}`, 'result');
+  gwTerm(`🎭 ${GW_FIELD_LABELS[field]} = ${escHtml(value)}? → ${isYes ? 'Yes' : 'No'} · ${hit} eliminated`, 'result');
 }
 
-// ── Importar / exportar roster ───────────────
+// ── Roster import / export ───────────────────
 
 function gwExport() {
   const blob = new Blob([JSON.stringify(gwRoster, null, 2)], { type: 'application/json' });
@@ -367,9 +367,9 @@ function gwExport() {
 function gwImportText(text) {
   let parsed;
   try { parsed = JSON.parse(text); }
-  catch { gwTerm('✗ Masquerade: el archivo no es JSON válido.', 'error'); return; }
+  catch { gwTerm('✗ Masquerade: that file is not valid JSON.', 'error'); return; }
   if (!Array.isArray(parsed) || !parsed.length) {
-    gwTerm('✗ Masquerade: el JSON debe ser un array de personajes.', 'error');
+    gwTerm('✗ Masquerade: the JSON must be an array of characters.', 'error');
     return;
   }
   gwRoster = parsed.map(gwCharDefaults);
@@ -382,7 +382,7 @@ function gwImportText(text) {
   gwSaveState();
   gwFillValues();
   gwRender();
-  gwTerm(`🎭 Masquerade: roster importado — ${gwRoster.length} personajes.`, 'info');
+  gwTerm(`🎭 Masquerade: roster imported — ${gwRoster.length} characters.`, 'info');
 }
 
 // ── Listeners ────────────────────────────────
@@ -403,7 +403,7 @@ document.getElementById('gwFileIn').addEventListener('change', e => {
   e.target.value = '';
 });
 
-// La fila de preguntas arranca oculta: es una ayuda opcional, no parte del tablero
+// The question row starts hidden: it's an optional aid, not part of the board
 document.getElementById('gwAskToggleBtn').addEventListener('click', e => {
   const row  = document.getElementById('gwAskRow');
   const show = row.style.display === 'none';

@@ -1,19 +1,19 @@
-"""Genera las miniaturas del modulo Masquerade.
+"""Build the thumbnails for the Masquerade module.
 
-Lee las rutas de 'imagen' en guesswho-data.js, escribe un webp reducido en
-guess_who/thumbs/ por cada una, y reapunta guesswho-data.js a la miniatura.
-Los originales de guess_who/ no se tocan nunca.
+Reads the 'imagen' paths out of guesswho-data.js, writes a downscaled webp into
+guess_who/thumbs/ for each one, and repoints guesswho-data.js at the thumbnail.
+The originals in guess_who/ are never touched.
 
-Uso, desde la raiz del repo:   python guesswho_thumbs.py
-                               python guesswho_thumbs.py --force   (rehace todas)
+Usage, from the repo root:   python guesswho_thumbs.py
+                             python guesswho_thumbs.py --force   (rebuild all)
 
-Es idempotente y detecta cambios: si la ruta ya apunta a guess_who/thumbs/,
-busca el original con el mismo nombre en guess_who/ y solo rehace la miniatura
-cuando el original es mas nuevo. Asi, si reemplazas la foto de un personaje,
-basta con volver a correr esto.
+Idempotent, and it notices changes: when a path already points at
+guess_who/thumbs/, it looks for the original of the same name in guess_who/ and
+only rebuilds when that original is newer. So if you replace a character's
+photo, just run this again.
 
-Para agregar un personaje: deja el original en guess_who/, pon esa ruta en
-'imagen', y corre el script.
+To add a character: drop the original in guess_who/, put that path in 'imagen',
+and run the script.
 """
 import os
 import re
@@ -24,7 +24,7 @@ from PIL import Image, ImageOps
 DATA    = "guesswho-data.js"
 SRC_DIR = "guess_who"
 DST_DIR = f"{SRC_DIR}/thumbs"
-MAX_W   = 420   # alcanza para la carta (88px) y para la ficha (108px) en pantallas 2x
+MAX_W   = 420   # enough for the card (88px) and the sheet (108px) on 2x displays
 QUALITY = 82
 EXTS    = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp")
 
@@ -32,7 +32,7 @@ FORCE = "--force" in sys.argv
 
 
 def find_original(stem):
-    """Busca guess_who/<stem>.<ext> ignorando mayusculas."""
+    """Find guess_who/<stem>.<ext>, case-insensitive."""
     for entry in os.listdir(SRC_DIR):
         path = os.path.join(SRC_DIR, entry)
         if not os.path.isfile(path):
@@ -65,7 +65,7 @@ for rel in refs:
     out_rel = f"{DST_DIR}/{stem}.webp"
 
     if rel.startswith(DST_DIR):
-        # ya apunta a la miniatura: rehacerla solo si el original cambio
+        # already points at the thumb: rebuild only if the original changed
         src = find_original(stem)
         if src is None:
             uptodate += 1
@@ -76,11 +76,11 @@ for rel in refs:
             continue
         build(src, out_rel)
         updated += 1
-        print(f"  actualizada: {stem}")
+        print(f"  updated: {stem}")
         continue
 
     if not os.path.exists(rel):
-        print(f"  falta el archivo: {rel}")
+        print(f"  missing file: {rel}")
         continue
 
     build(rel, out_rel)
@@ -94,5 +94,5 @@ for old, new in mapping.items():
 if mapping:
     open(DATA, "w", encoding="utf-8").write(data)
 
-print(f"Done! {built} nuevas ({bytes_in / 1048576:.1f} MB -> {bytes_out / 1048576:.2f} MB), "
-      f"{updated} actualizadas, {uptodate} sin cambios.")
+print(f"Done! {built} new ({bytes_in / 1048576:.1f} MB -> {bytes_out / 1048576:.2f} MB), "
+      f"{updated} updated, {uptodate} unchanged.")

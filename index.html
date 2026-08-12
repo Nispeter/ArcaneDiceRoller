@@ -304,31 +304,31 @@
       <h2 class="panel-title">Masquerade</h2>
 
       <div class="gw-toolbar">
-        <button id="gwNewBtn"    class="gw-action-btn gw-primary" title="Asignar un personaje secreto al azar">🎲 Nueva partida</button>
-        <button id="gwRevealBtn" class="gw-action-btn" title="Mostrar / ocultar tu personaje">👁 Ver mi personaje</button>
-        <button id="gwUndoBtn"   class="gw-action-btn" title="Deshacer el último descarte">↺ Deshacer</button>
-        <button id="gwResetBtn"  class="gw-action-btn" title="Devolver a todos al tablero">♻ Limpiar</button>
-        <button id="gwImportBtn" class="gw-action-btn gw-icon-btn" title="Importar roster .json" aria-label="Importar roster">⤓</button>
-        <button id="gwExportBtn" class="gw-action-btn gw-icon-btn" title="Exportar roster .json" aria-label="Exportar roster">💾</button>
-        <button id="gwAskToggleBtn" class="gw-action-btn gw-icon-btn" title="Preguntar por atributo" aria-label="Preguntar por atributo" aria-expanded="false">?</button>
+        <button id="gwNewBtn"    class="gw-action-btn gw-primary" title="Assign a random secret character">🎲 New Game</button>
+        <button id="gwRevealBtn" class="gw-action-btn" title="Show / hide your character">👁 Reveal Mine</button>
+        <button id="gwUndoBtn"   class="gw-action-btn" title="Undo the last elimination">↺ Undo</button>
+        <button id="gwResetBtn"  class="gw-action-btn" title="Bring everyone back to the board">♻ Clear</button>
+        <button id="gwImportBtn" class="gw-action-btn gw-icon-btn" title="Import roster .json" aria-label="Import roster">⤓</button>
+        <button id="gwExportBtn" class="gw-action-btn gw-icon-btn" title="Export roster .json" aria-label="Export roster">💾</button>
+        <button id="gwAskToggleBtn" class="gw-action-btn gw-icon-btn" title="Ask about an attribute" aria-label="Ask about an attribute" aria-expanded="false">?</button>
         <input type="file" id="gwFileIn" accept=".json,application/json" style="display:none" />
       </div>
 
       <div id="gwSecret" class="gw-secret" style="display:none"></div>
 
       <div class="gw-ask-row" id="gwAskRow" style="display:none">
-        <span class="gw-ask-label">Preguntar por</span>
+        <span class="gw-ask-label">Ask about</span>
         <select id="gwAskField" class="gw-select">
-          <option value="raza">Raza</option>
-          <option value="subespecie">Sub-especie</option>
-          <option value="clase">Clase</option>
-          <option value="faccion">Facción</option>
-          <option value="estado">Estado</option>
-          <option value="jugador">Jugador</option>
+          <option value="raza">Race</option>
+          <option value="subespecie">Subrace</option>
+          <option value="clase">Class</option>
+          <option value="faccion">Faction</option>
+          <option value="estado">Status</option>
+          <option value="jugador">Player</option>
         </select>
         <select id="gwAskValue" class="gw-select gw-select-wide"></select>
-        <button id="gwAskYes" class="gw-ask-btn gw-yes" title="Descarta a los que NO calzan">Sí</button>
-        <button id="gwAskNo"  class="gw-ask-btn gw-no"  title="Descarta a los que SÍ calzan">No</button>
+        <button id="gwAskYes" class="gw-ask-btn gw-yes" title="Eliminate everyone who does NOT match">Yes</button>
+        <button id="gwAskNo"  class="gw-ask-btn gw-no"  title="Eliminate everyone who DOES match">No</button>
       </div>
 
       <div id="gwStatus" class="gw-status"></div>
