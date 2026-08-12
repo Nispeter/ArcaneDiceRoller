@@ -310,12 +310,13 @@
         <button id="gwResetBtn"  class="gw-action-btn" title="Devolver a todos al tablero">♻ Limpiar</button>
         <button id="gwImportBtn" class="gw-action-btn gw-icon-btn" title="Importar roster .json" aria-label="Importar roster">⤓</button>
         <button id="gwExportBtn" class="gw-action-btn gw-icon-btn" title="Exportar roster .json" aria-label="Exportar roster">💾</button>
+        <button id="gwAskToggleBtn" class="gw-action-btn gw-icon-btn" title="Preguntar por atributo" aria-label="Preguntar por atributo" aria-expanded="false">?</button>
         <input type="file" id="gwFileIn" accept=".json,application/json" style="display:none" />
       </div>
 
       <div id="gwSecret" class="gw-secret" style="display:none"></div>
 
-      <div class="gw-ask-row">
+      <div class="gw-ask-row" id="gwAskRow" style="display:none">
         <span class="gw-ask-label">Preguntar por</span>
         <select id="gwAskField" class="gw-select">
           <option value="raza">Raza</option>

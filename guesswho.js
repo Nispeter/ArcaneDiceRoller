@@ -391,6 +391,15 @@ document.getElementById('gwFileIn').addEventListener('change', e => {
   e.target.value = '';
 });
 
+// La fila de preguntas arranca oculta: es una ayuda opcional, no parte del tablero
+document.getElementById('gwAskToggleBtn').addEventListener('click', e => {
+  const row  = document.getElementById('gwAskRow');
+  const show = row.style.display === 'none';
+  row.style.display = show ? '' : 'none';
+  e.currentTarget.classList.toggle('active', show);
+  e.currentTarget.setAttribute('aria-expanded', String(show));
+});
+
 gwAskFieldEl.addEventListener('change', gwFillValues);
 document.getElementById('gwAskYes').addEventListener('click', () => gwAsk(true));
 document.getElementById('gwAskNo').addEventListener('click', () => gwAsk(false));

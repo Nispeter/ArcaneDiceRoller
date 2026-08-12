@@ -1999,6 +1999,11 @@ mark.notes-mark {
   background: color-mix(in srgb, var(--cyan) 18%, transparent);
   border-color: var(--cyan-light); color: #fff; box-shadow: var(--glow-c);
 }
+.gw-action-btn.active {
+  background: color-mix(in srgb, var(--purple) 28%, transparent);
+  border-color: var(--purple-light); color: var(--purple-light);
+  box-shadow: var(--glow-p);
+}
 
 /* ── Fila de preguntas ── */
 .gw-ask-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
