@@ -1956,3 +1956,210 @@ mark.notes-mark {
 .notes-footer { display: flex; justify-content: space-between; margin-top: 6px; font-size: .72rem; color: var(--text-dim); }
 .notes-saved  { opacity: 0; transition: opacity .4s; }
 .notes-saved.flash { opacity: 1; }
+
+/* ── Guess Who Panel ── */
+/* Ancho mayor que el resto: un grid de retratos en 30% queda ilegible.
+   Los media queries de main.grid .panel usan !important y siguen mandando. */
+.guesswho-panel { flex-basis: 62%; gap: .75rem; }
+
+.gw-toolbar { display: flex; gap: 5px; flex-wrap: wrap; }
+.gw-action-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 10px; font-size: .73rem; font-family: 'Share Tech Mono', monospace;
+  white-space: nowrap; cursor: pointer; line-height: 1;
+  background: color-mix(in srgb, var(--purple) 10%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text-dim);
+  transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+}
+.gw-action-btn:hover {
+  background: color-mix(in srgb, var(--purple) 24%, transparent);
+  border-color: var(--purple-light); color: var(--text);
+  box-shadow: var(--glow-p);
+}
+.gw-action-btn.gw-primary {
+  color: color-mix(in srgb, var(--cyan-light) 80%, var(--text));
+  border-color: color-mix(in srgb, var(--cyan) 35%, var(--border));
+  background: color-mix(in srgb, var(--cyan) 6%, transparent);
+}
+.gw-action-btn.gw-primary:hover {
+  background: color-mix(in srgb, var(--cyan) 18%, transparent);
+  border-color: var(--cyan-light); color: #fff; box-shadow: var(--glow-c);
+}
+
+/* ── Fila de preguntas ── */
+.gw-ask-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.gw-ask-label {
+  font-family: 'Share Tech Mono', monospace; font-size: .72rem;
+  color: var(--text-dim); text-transform: uppercase; letter-spacing: .05em;
+}
+.gw-select {
+  font-family: 'Share Tech Mono', monospace; font-size: .76rem;
+  background: var(--panel-inset); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  padding: 4px 6px; outline: none; cursor: pointer; max-width: 100%;
+}
+.gw-select:focus { border-color: var(--purple-light); }
+.gw-select-wide { flex: 0 1 240px; min-width: 0; }
+.gw-select option { background: var(--bg2); color: var(--text); }
+.gw-ask-btn {
+  padding: 5px 13px; font-family: 'Cinzel', serif; font-size: .76rem; font-weight: 600;
+  cursor: pointer; line-height: 1; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--panel-inset); color: var(--text-dim);
+  transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+}
+.gw-ask-btn.gw-yes:hover {
+  background: color-mix(in srgb, #4ade80 18%, transparent);
+  border-color: #4ade80; color: #fff;
+  box-shadow: 0 0 10px color-mix(in srgb, #4ade80 40%, transparent);
+}
+.gw-ask-btn.gw-no:hover {
+  background: color-mix(in srgb, #f87171 18%, transparent);
+  border-color: #f87171; color: #fff;
+  box-shadow: 0 0 10px color-mix(in srgb, #f87171 40%, transparent);
+}
+
+/* ── Estado ── */
+.gw-status {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-family: 'Share Tech Mono', monospace; font-size: .75rem; color: var(--text-dim);
+}
+.gw-status-count strong { color: var(--cyan-light); font-size: .95rem; }
+.gw-status-dim   { font-style: italic; }
+.gw-status-hint  { color: var(--accent); }
+.gw-status-warn  { color: #f87171; }
+
+/* ── Retratos ── */
+.gw-thumb, .gw-secret-thumb, .gw-detail-thumb {
+  position: relative; overflow: hidden; border-radius: var(--radius);
+  background: color-mix(in srgb, var(--gw-accent, var(--purple)) 22%, var(--panel-inset));
+  display: flex; align-items: center; justify-content: center;
+}
+.gw-thumb img, .gw-secret-thumb img, .gw-detail-thumb img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center top; display: block;
+}
+.gw-initial {
+  font-family: 'Cinzel', serif; font-weight: 700;
+  color: var(--gw-accent, var(--purple-light));
+  text-shadow: 0 0 10px color-mix(in srgb, var(--gw-accent, var(--purple)) 60%, transparent);
+  user-select: none;
+}
+
+/* ── Grid de cartas ── */
+.gw-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: .5rem; max-height: 560px;
+  /* overflow-x oculto: las cartas descartadas rotan y se salen del ancho */
+  overflow-y: auto; overflow-x: hidden; padding: 2px;
+}
+.gw-card {
+  position: relative; cursor: pointer; border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--gw-accent, var(--purple)) 45%, var(--border));
+  background: var(--panel-inset); padding: 3px; overflow: hidden;
+  transition: transform .14s, box-shadow .14s, border-color .14s, filter .2s, opacity .2s;
+}
+.gw-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--gw-accent, var(--purple-light));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--gw-accent, var(--purple)) 45%, transparent);
+}
+.gw-card .gw-thumb { width: 100%; aspect-ratio: 3 / 4; }
+.gw-card .gw-initial { font-size: 1.9rem; }
+.gw-card-name {
+  display: block; margin-top: 3px; padding: 0 2px;
+  font-family: 'Share Tech Mono', monospace; font-size: .66rem; line-height: 1.25;
+  color: var(--text); text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gw-info-btn {
+  position: absolute; top: 5px; right: 5px; z-index: 2;
+  width: 17px; height: 17px; padding: 0; line-height: 1; cursor: pointer;
+  font-family: 'Cinzel', serif; font-size: .68rem; font-weight: 700;
+  border-radius: 50%; border: 1px solid var(--border);
+  background: rgba(8,0,26,.78); color: var(--text-dim);
+  opacity: 0; transition: opacity .15s, color .15s, border-color .15s;
+}
+.gw-card:hover .gw-info-btn { opacity: 1; }
+.gw-info-btn:hover { color: var(--cyan-light); border-color: var(--cyan-light); }
+
+/* Insignia de estado (muerto / desaparecido / traidor) */
+.gw-badge {
+  position: absolute; top: 5px; left: 5px; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  font-family: 'Cinzel', serif; font-size: .72rem; line-height: 1;
+  background: rgba(8,0,26,.82); border: 1px solid var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 45%, transparent);
+  pointer-events: none;
+}
+
+/* Descartado — el grayscale va sólo en el retrato para que la ✕ siga roja */
+.gw-card.out {
+  transform: rotate(-2deg);
+  border-color: color-mix(in srgb, #f87171 32%, var(--border));
+  box-shadow: none;
+}
+.gw-card.out .gw-thumb { filter: grayscale(1) brightness(.42); }
+.gw-card.out .gw-card-name { opacity: .45; }
+.gw-card.out:hover { transform: rotate(-2deg) translateY(-2px); border-color: #f87171; box-shadow: none; }
+.gw-card.out:hover .gw-thumb { filter: grayscale(1) brightness(.62); }
+.gw-card.out::after {
+  content: '✕'; position: absolute; inset: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 2.6rem; font-weight: 700;
+  color: #f87171; opacity: .92;
+  text-shadow: 0 0 14px rgba(0,0,0,.95); pointer-events: none;
+}
+
+/* ── Ficha del secreto ── */
+.gw-secret, .gw-detail {
+  display: flex; gap: .85rem; padding: .7rem;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: color-mix(in srgb, var(--purple) 8%, var(--panel-inset));
+}
+.gw-secret-thumb { flex: 0 0 84px; width: 84px; aspect-ratio: 3 / 4; }
+.gw-detail-thumb { flex: 0 0 108px; width: 108px; aspect-ratio: 3 / 4; }
+.gw-secret-thumb .gw-initial { font-size: 1.9rem; }
+.gw-detail-thumb .gw-initial { font-size: 2.4rem; }
+.gw-secret-body, .gw-detail-body { flex: 1; min-width: 0; }
+.gw-secret-label {
+  font-family: 'Share Tech Mono', monospace; font-size: .68rem;
+  color: var(--text-dim); text-transform: uppercase; letter-spacing: .08em;
+}
+.gw-secret-name, .gw-detail-name {
+  font-family: 'Cinzel', serif; font-size: 1.05rem; font-weight: 700;
+  margin-bottom: .35rem; line-height: 1.2;
+}
+.gw-meta { display: flex; gap: 6px; font-family: 'Share Tech Mono', monospace; font-size: .73rem; line-height: 1.5; }
+.gw-meta-k { flex: 0 0 68px; color: var(--text-dim); }
+.gw-meta-v { flex: 1; min-width: 0; color: var(--text); overflow-wrap: anywhere; }
+
+/* ── Ficha desplegada ── */
+.gw-detail { position: relative; }
+.gw-detail-close {
+  position: absolute; top: 6px; right: 6px; cursor: pointer;
+  width: 20px; height: 20px; padding: 0; line-height: 1; font-size: .72rem;
+  border-radius: 50%; border: 1px solid var(--border);
+  background: var(--panel-inset); color: var(--text-dim);
+  transition: color .15s, border-color .15s;
+}
+.gw-detail-close:hover { color: #f87171; border-color: #f87171; }
+.gw-detail-desc, .gw-detail-lore {
+  margin-top: .5rem; font-family: 'Share Tech Mono', monospace;
+  font-size: .76rem; line-height: 1.55; color: var(--text);
+}
+.gw-detail-lore { color: var(--text-dim); font-style: italic; }
+.gw-detail-actions { margin-top: .6rem; }
+
+/* ── Veredicto ── */
+.gw-verdict { flex: 1; text-align: center; padding: .5rem; }
+.gw-verdict-title { font-family: 'Cinzel', serif; font-size: 1.15rem; font-weight: 700; margin-bottom: .3rem; }
+.gw-win  .gw-verdict-title { color: var(--accent); text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 60%, transparent); }
+.gw-lose .gw-verdict-title { color: #f87171; }
+.gw-verdict-body {
+  font-family: 'Share Tech Mono', monospace; font-size: .8rem;
+  color: var(--text); margin-bottom: .7rem;
+}
+.gw-verdict-body strong { color: var(--cyan-light); }

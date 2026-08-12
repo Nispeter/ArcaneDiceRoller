@@ -1,0 +1,5 @@
+# Retratos originales de Adivina Quién: pesan ~82 MB y la app no los carga.
+# Solo se versionan las miniaturas de guess_who/thumbs/ (~1 MB), que es lo que
+# referencia guesswho-data.js. Para regenerarlas: python guesswho_thumbs.py
+guess_who/*
+!guess_who/thumbs/
