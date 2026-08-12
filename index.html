@@ -39,7 +39,7 @@
       <button class="panel-toggle-btn" data-panel="timer">⏱ Timer</button>
       <button class="panel-toggle-btn" data-panel="prob">📊 Prob</button>
       <button class="panel-toggle-btn" data-panel="notes">📝 Notes</button>
-      <button class="panel-toggle-btn" data-panel="guesswho">🕵 Adivina Quién</button>
+      <button class="panel-toggle-btn" data-panel="guesswho">🎭 Masquerade</button>
     </nav>
   </header>
 
@@ -299,17 +299,17 @@
       </div>
     </section>
 
-    <!-- ── Adivina Quién ── -->
+    <!-- ── Masquerade ── -->
     <section class="panel guesswho-panel">
-      <h2 class="panel-title">Adivina Quién</h2>
+      <h2 class="panel-title">Masquerade</h2>
 
       <div class="gw-toolbar">
         <button id="gwNewBtn"    class="gw-action-btn gw-primary" title="Asignar un personaje secreto al azar">🎲 Nueva partida</button>
         <button id="gwRevealBtn" class="gw-action-btn" title="Mostrar / ocultar tu personaje">👁 Ver mi personaje</button>
         <button id="gwUndoBtn"   class="gw-action-btn" title="Deshacer el último descarte">↺ Deshacer</button>
-        <button id="gwResetBtn"  class="gw-action-btn" title="Devolver a todos al tablero">♻ Reiniciar</button>
-        <button id="gwImportBtn" class="gw-action-btn" title="Importar roster .json">📂 Importar</button>
-        <button id="gwExportBtn" class="gw-action-btn" title="Exportar roster .json">💾 Exportar</button>
+        <button id="gwResetBtn"  class="gw-action-btn" title="Devolver a todos al tablero">♻ Limpiar</button>
+        <button id="gwImportBtn" class="gw-action-btn gw-icon-btn" title="Importar roster .json" aria-label="Importar roster">⤓</button>
+        <button id="gwExportBtn" class="gw-action-btn gw-icon-btn" title="Exportar roster .json" aria-label="Exportar roster">💾</button>
         <input type="file" id="gwFileIn" accept=".json,application/json" style="display:none" />
       </div>
 

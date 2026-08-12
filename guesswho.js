@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════
-   guesswho.js — Adivina Quién
+   guesswho.js — Masquerade
    Personaje secreto · descarte manual y por
    atributo · fichas · roster importable
 ════════════════════════════════════════════ */
@@ -232,7 +232,7 @@ function gwGuess(id) {
   const c = gwById(id);
   if (!c) return;
   if (!gwSecretId) {
-    gwTerm('✗ Adivina Quién: no hay partida en curso. Usá /gw o 🎲 Nueva partida.', 'error');
+    gwTerm('✗ Masquerade: no hay partida en curso. Usá /gw o 🎲 Nueva partida.', 'error');
     return;
   }
   const win = id === gwSecretId;
@@ -249,15 +249,15 @@ function gwGuess(id) {
     </div>`;
   gwDetailEl.querySelector('.gw-verdict-again').addEventListener('click', () => { gwHideDetail(); gwNewGame(); });
   gwTerm(win
-    ? `🕵 Adivina Quién: acertaste — era ${escHtml(c.personaje)}.`
-    : `🕵 Adivina Quién: fallaste — era ${escHtml(secret ? secret.personaje : '???')}.`,
+    ? `🎭 Masquerade: acertaste — era ${escHtml(c.personaje)}.`
+    : `🎭 Masquerade: fallaste — era ${escHtml(secret ? secret.personaje : '???')}.`,
     win ? 'winner' : 'error');
 }
 
 // ── Partida ──────────────────────────────────
 
 function gwNewGame() {
-  if (!gwRoster.length) { gwTerm('✗ Adivina Quién: el roster está vacío.', 'error'); return; }
+  if (!gwRoster.length) { gwTerm('✗ Masquerade: el roster está vacío.', 'error'); return; }
   gwSecretId = gwRoster[Math.floor(Math.random() * gwRoster.length)].id;
   gwOut.clear();
   gwHistory = [];
@@ -265,7 +265,7 @@ function gwNewGame() {
   gwHideDetail();
   gwSaveState();
   gwRender();
-  gwTerm(`🕵 Adivina Quién: personaje secreto asignado (${gwRoster.length} en el tablero).`, 'info');
+  gwTerm(`🎭 Masquerade: personaje secreto asignado (${gwRoster.length} en el tablero).`, 'info');
 }
 
 function gwResetBoard() {
@@ -283,7 +283,7 @@ function gwUndo() {
 }
 
 function gwToggleReveal() {
-  if (!gwSecretId) { gwTerm('✗ Adivina Quién: no hay partida en curso.', 'error'); return; }
+  if (!gwSecretId) { gwTerm('✗ Masquerade: no hay partida en curso.', 'error'); return; }
   gwRevealed = !gwRevealed;
   gwRenderSecret();
 }
@@ -347,7 +347,7 @@ function gwExport() {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `adivina-quien-roster-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `masquerade-roster-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -355,9 +355,9 @@ function gwExport() {
 function gwImportText(text) {
   let parsed;
   try { parsed = JSON.parse(text); }
-  catch { gwTerm('✗ Adivina Quién: el archivo no es JSON válido.', 'error'); return; }
+  catch { gwTerm('✗ Masquerade: el archivo no es JSON válido.', 'error'); return; }
   if (!Array.isArray(parsed) || !parsed.length) {
-    gwTerm('✗ Adivina Quién: el JSON debe ser un array de personajes.', 'error');
+    gwTerm('✗ Masquerade: el JSON debe ser un array de personajes.', 'error');
     return;
   }
   gwRoster = parsed.map(gwCharDefaults);
@@ -370,7 +370,7 @@ function gwImportText(text) {
   gwSaveState();
   gwFillValues();
   gwRender();
-  gwTerm(`🕵 Adivina Quién: roster importado — ${gwRoster.length} personajes.`, 'info');
+  gwTerm(`🎭 Masquerade: roster importado — ${gwRoster.length} personajes.`, 'info');
 }
 
 // ── Listeners ────────────────────────────────

@@ -75,7 +75,7 @@ function handleTermCommand(raw) {
       '/cnext               #Advance to next turn',
       '/clist               #List all combatants',
       '/cclear              #Reset combat (keep party)',
-      '── Adivina Quién ─────────────────',
+      '── Masquerade ────────────────────',
       '/gw              #New game — assign a secret character',
       '/gwsee           #Reveal your secret character here',
       '/gwlist          #List the characters still standing',
@@ -518,18 +518,18 @@ function handleTermCommand(raw) {
     return;
   }
 
-  // /gw — Adivina Quién: new game
+  // /gw — Masquerade: new game
   if (/^\/gw$/i.test(cmd)) {
-    if (typeof gwNewGame !== 'function') { termPrint('✗ Guess Who module not loaded.', 'error'); return; }
+    if (typeof gwNewGame !== 'function') { termPrint('✗ Masquerade module not loaded.', 'error'); return; }
     gwNewGame();
     return;
   }
 
   // /gwsee — reveal the secret character in the terminal
   if (/^\/gwsee$/i.test(cmd)) {
-    if (typeof gwById !== 'function') { termPrint('✗ Guess Who module not loaded.', 'error'); return; }
+    if (typeof gwById !== 'function') { termPrint('✗ Masquerade module not loaded.', 'error'); return; }
     const c = gwSecretId ? gwById(gwSecretId) : null;
-    if (!c) { termPrint('✗ No Guess Who game in progress — try /gw', 'error'); return; }
+    if (!c) { termPrint('✗ No Masquerade game in progress — try /gw', 'error'); return; }
     termPrint(`🕵 Your character: <strong>${escHtml(c.personaje)}</strong>`, 'winner');
     const meta = [c.jugador, [c.raza, c.subespecie].filter(Boolean).join(' '), c.clase, c.faccion].filter(Boolean);
     if (meta.length) termPrint(`   ${escHtml(meta.join(' · '))}`, 'info');
@@ -538,7 +538,7 @@ function handleTermCommand(raw) {
 
   // /gwlist — characters not yet discarded
   if (/^\/gwlist$/i.test(cmd)) {
-    if (typeof gwRoster === 'undefined') { termPrint('✗ Guess Who module not loaded.', 'error'); return; }
+    if (typeof gwRoster === 'undefined') { termPrint('✗ Masquerade module not loaded.', 'error'); return; }
     const alive = gwRoster.filter(c => !gwOut.has(c.id));
     if (!alive.length) { termPrint('✗ Every character has been discarded.', 'error'); return; }
     termPrint(`🕵 Still standing (${alive.length}/${gwRoster.length}):`, 'info');

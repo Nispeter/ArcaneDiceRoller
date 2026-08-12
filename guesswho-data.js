@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════
    guesswho-data.js — Roster de personajes
-   Fuente por defecto del módulo Adivina Quién.
+   Fuente por defecto del módulo Masquerade.
    Se puede reemplazar en vivo con 📂 Importar
    (queda guardado en localStorage y pisa a este
    archivo hasta que se importe otro o se resetee).

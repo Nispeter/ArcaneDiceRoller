@@ -1,4 +1,4 @@
-"""Genera las miniaturas del modulo Adivina Quien.
+"""Genera las miniaturas del modulo Masquerade.
 
 Lee las rutas de 'imagen' en guesswho-data.js, escribe un webp reducido en
 guess_who/thumbs/ por cada una, y reapunta guesswho-data.js a la miniatura.
