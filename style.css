@@ -2168,6 +2168,24 @@ mark.notes-mark {
   transition: color .15s, border-color .15s;
 }
 .gw-detail-close:hover { color: #f87171; border-color: #f87171; }
+/* Illustration switcher, only when a character has more than one */
+.gw-detail-art { flex: 0 0 auto; display: flex; flex-direction: column; gap: 5px; align-items: center; }
+.gw-img-nav { display: flex; align-items: center; gap: 5px; }
+.gw-img-btn {
+  width: 22px; height: 20px; padding: 0; line-height: 1; cursor: pointer;
+  font-size: .62rem; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--panel-inset); color: var(--text-dim);
+  transition: color .15s, border-color .15s, background .15s;
+}
+.gw-img-btn:hover {
+  background: color-mix(in srgb, var(--cyan) 18%, transparent);
+  border-color: var(--cyan-light); color: #fff;
+}
+.gw-img-count {
+  font-family: 'Share Tech Mono', monospace; font-size: .68rem; color: var(--text-dim);
+  min-width: 24px; text-align: center;
+}
+
 .gw-detail-desc, .gw-detail-lore {
   margin-top: .5rem; font-family: 'Share Tech Mono', monospace;
   font-size: .76rem; line-height: 1.55; color: var(--text);
@@ -2185,6 +2203,31 @@ mark.notes-mark {
   color: var(--text); margin-bottom: .7rem;
 }
 .gw-verdict-body strong { color: var(--cyan-light); }
+
+/* ── Hover card ──
+   Fixed to the viewport and pinned to the cursor by JS. pointer-events:none so
+   it never eats the click that eliminates a card. Mouse-only; on touch the
+   listeners are never bound. */
+.gw-hover {
+  position: fixed; top: 0; left: 0; z-index: 50;
+  max-width: 300px; padding: .6rem .7rem;
+  border: 1px solid var(--purple-light); border-radius: var(--radius);
+  background: color-mix(in srgb, var(--bg2) 94%, transparent);
+  box-shadow: var(--glow-p), 0 6px 24px rgba(0,0,0,.55);
+  backdrop-filter: blur(3px);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .12s;
+}
+.gw-hover.visible { opacity: 1; visibility: visible; }
+.gw-hover-name {
+  font-family: 'Cinzel', serif; font-size: .95rem; font-weight: 700;
+  margin-bottom: .3rem; line-height: 1.2;
+}
+.gw-hover .gw-meta-k { flex: 0 0 58px; }
+.gw-hover-desc {
+  margin-top: .4rem; font-family: 'Share Tech Mono', monospace;
+  font-size: .74rem; line-height: 1.5; color: var(--text);
+}
 
 /* ── Masquerade responsive ──
    On small screens ~117px portraits are unreadable, so the columns widen. The

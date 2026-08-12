@@ -53,7 +53,11 @@ def build(src, out):
 
 
 data = open(DATA, encoding="utf-8").read()
-refs = [r for r in re.findall(r"imagen: '([^']+)'", data) if r]
+
+# 'imagen' can be a single path or a list of them; grab every quoted path either way
+refs = []
+for chunk in re.findall(r"imagen: (\[[^\]]*\]|'[^']*')", data):
+    refs.extend(r for r in re.findall(r"'([^']+)'", chunk) if r)
 
 os.makedirs(DST_DIR, exist_ok=True)
 mapping = {}
@@ -89,9 +93,15 @@ for rel in refs:
     bytes_out += os.path.getsize(out_rel)
     mapping[rel] = out_rel
 
-for old, new in mapping.items():
-    data = data.replace(f"imagen: '{old}'", f"imagen: '{new}'")
 if mapping:
+    # rewrite every quoted path inside an 'imagen' value, scalar or list alike
+    def repoint(m):
+        chunk = re.sub(r"'([^']+)'",
+                       lambda q: "'%s'" % mapping.get(q.group(1), q.group(1)),
+                       m.group(1))
+        return f"imagen: {chunk}"
+
+    data = re.sub(r"imagen: (\[[^\]]*\]|'[^']*')", repoint, data)
     open(DATA, "w", encoding="utf-8").write(data)
 
 print(f"Done! {built} new ({bytes_in / 1048576:.1f} MB -> {bytes_out / 1048576:.2f} MB), "

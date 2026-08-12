@@ -338,6 +338,11 @@
 
   </main>
 
+  <!-- Masquerade hover card. Lives outside main.grid on purpose: .panel has a
+       backdrop-filter, which would make position:fixed resolve against the panel
+       and get clipped by the grid's overflow. -->
+  <div id="gwHover" class="gw-hover" aria-hidden="true"></div>
+
   <script src="constants.js"></script>
   <script src="data.js"></script>
   <script src="spells.js"></script>

@@ -71,7 +71,10 @@ const GUESS_WHO = [
     estado: '',
     descripcion: '',
     lore: '',
-    imagen: 'guess_who/thumbs/Nitokh.webp',
+    imagen: [
+      'guess_who/thumbs/Nitokh.webp',
+      'guess_who/thumbs/Nitokh Unarmored.webp',
+    ],
   },
 
   // ── Göllnyr ──
@@ -154,7 +157,7 @@ const GUESS_WHO = [
     subespecie: 'High',
     clase: 'Warlock | Sorcerer',
     faccion: 'Bastión de las Máscaras',
-    estado: '',
+    estado: 'Dead',
     descripcion: '',
     lore: '',
     imagen: 'guess_who/thumbs/redmor.webp',
@@ -167,15 +170,15 @@ const GUESS_WHO = [
     subespecie: 'High',
     clase: 'Sorcerer | Warlock',
     faccion: 'Pacto de los Fragmentados',
-    estado: '',
+    estado: 'Dead',
     descripcion: '',
     lore: '',
     imagen: 'guess_who/thumbs/navnlos.webp',
   },
   {
-    id: 'khavyer',
+    id: 'bryn',
     jugador: 'Paula',
-    personaje: "Khav'yer",
+    personaje: 'Bryn',
     raza: 'Elf',
     subespecie: 'High',
     clase: 'Warlock | Sorcerer',
@@ -183,7 +186,7 @@ const GUESS_WHO = [
     estado: '',
     descripcion: '',
     lore: '',
-    imagen: '',
+    imagen: 'guess_who/thumbs/Bryn.webp',
   },
 
   // ── Eevona ──
@@ -392,7 +395,10 @@ const GUESS_WHO = [
     estado: '',
     descripcion: '',
     lore: '',
-    imagen: 'guess_who/thumbs/Franco Rossi.webp',
+    imagen: [
+      'guess_who/thumbs/Franco Rossi.webp',
+      'guess_who/thumbs/Inquisidor.webp',
+    ],
   },
   {
     id: 'gizmo-heartrings',
@@ -420,7 +426,11 @@ const GUESS_WHO = [
     estado: '',
     descripcion: '',
     lore: '',
-    imagen: 'guess_who/thumbs/Meli.webp',
+    imagen: [
+      'guess_who/thumbs/Meli.webp',
+      'guess_who/thumbs/Evil_Meli.webp',
+      'guess_who/thumbs/EvilMeli2_Calventis Arc.webp',
+    ],
   },
   {
     id: 'lucca-elster',
@@ -530,7 +540,7 @@ const GUESS_WHO = [
     estado: '',
     descripcion: '',
     lore: '',
-    imagen: '',
+    imagen: 'guess_who/thumbs/callus.webp',
   },
 
   // ── Nikolai ──
@@ -575,19 +585,6 @@ const GUESS_WHO = [
   },
 
   // ── Eric ──
-  {
-    id: 'bartzabel',
-    jugador: 'Eric',
-    personaje: 'Bartzabel',
-    raza: 'Aarakocra',
-    subespecie: '',
-    clase: 'Druid of the Sea',
-    faccion: 'Ninguno',
-    estado: '',
-    descripcion: '',
-    lore: '',
-    imagen: '',
-  },
 
   // ── Paula ── (segundo bloque de la planilla: si es otra jugadora, renombrar acá)
   {
@@ -601,7 +598,10 @@ const GUESS_WHO = [
     estado: '',
     descripcion: '',
     lore: '',
-    imagen: 'guess_who/thumbs/soleas terminado.webp',
+    imagen: [
+      'guess_who/thumbs/soleas terminado.webp',
+      'guess_who/thumbs/Soleas de Astora png.webp',
+    ],
   },
   {
     id: 'paco-khairtai',

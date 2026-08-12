@@ -121,10 +121,17 @@ function gwPushHistory() {
 
 // ── Render ───────────────────────────────────
 
-function gwThumb(c, cls) {
+// 'imagen' may be a single path or a list of them; the first one is the card art
+function gwImages(c) {
+  if (Array.isArray(c.imagen)) return c.imagen.filter(Boolean);
+  return c.imagen ? [c.imagen] : [];
+}
+
+function gwThumb(c, cls, idx = 0) {
   const initial = [...c.personaje][0] || '?';
-  const img = c.imagen
-    ? `<img src="${encodeURI(c.imagen)}" alt="" loading="lazy" decoding="async" onerror="this.remove()" />`
+  const src = gwImages(c)[idx];
+  const img = src
+    ? `<img src="${encodeURI(src)}" alt="" loading="lazy" decoding="async" onerror="this.remove()" />`
     : '';
   return `<div class="${cls}" style="--gw-accent:${gwAccent(c.personaje)}">
             <span class="gw-initial">${escHtml(initial)}</span>${img}
@@ -132,6 +139,8 @@ function gwThumb(c, cls) {
 }
 
 function gwRenderGrid() {
+  // the hovered card is about to be destroyed, so mouseleave would never fire
+  gwHoverHide();
   gwGridEl.innerHTML = '';
 
   gwRoster.forEach(c => {
@@ -159,8 +168,48 @@ function gwRenderGrid() {
       gwShowDetail(c.id);
     });
 
+    if (GW_CAN_HOVER) {
+      card.addEventListener('mouseenter', () => gwHoverShow(c));
+      card.addEventListener('mousemove', gwHoverMove);
+      card.addEventListener('mouseleave', gwHoverHide);
+    }
+
     gwGridEl.appendChild(card);
   });
+}
+
+// ── Hover card (mouse only) ──────────────────
+// Follows the cursor with the character's info. Skipped on touch, where there
+// is no hover and the sheet button already covers it.
+
+const GW_CAN_HOVER = window.matchMedia
+  ? window.matchMedia('(hover: hover) and (pointer: fine)').matches
+  : false;
+
+const gwHoverEl = document.getElementById('gwHover');
+
+function gwHoverShow(c) {
+  gwHoverEl.innerHTML = `
+    <div class="gw-hover-name" style="color:${gwAccent(c.personaje)}">${escHtml(c.personaje)}</div>
+    ${gwMetaRows(c)}
+    ${c.descripcion ? `<p class="gw-hover-desc">${escHtml(c.descripcion)}</p>` : ''}`;
+  gwHoverEl.classList.add('visible');
+}
+
+function gwHoverMove(e) {
+  const pad = 16;
+  const w = gwHoverEl.offsetWidth;
+  const h = gwHoverEl.offsetHeight;
+  let x = e.clientX + pad;
+  let y = e.clientY + pad;
+  if (x + w > window.innerWidth  - 8) x = Math.max(8, e.clientX - w - pad);
+  if (y + h > window.innerHeight - 8) y = Math.max(8, window.innerHeight - h - 8);
+  gwHoverEl.style.left = `${x}px`;
+  gwHoverEl.style.top  = `${y}px`;
+}
+
+function gwHoverHide() {
+  gwHoverEl.classList.remove('visible');
 }
 
 function gwRenderStatus() {
@@ -210,13 +259,29 @@ function gwRender() {
 
 // ── Character sheet ──────────────────────────
 
+let gwDetailId  = null;   // character currently open in the sheet
+let gwDetailImg = 0;      // which of their illustrations is showing
+
 function gwShowDetail(id) {
   const c = gwById(id);
   if (!c) return;
+  if (id !== gwDetailId) { gwDetailId = id; gwDetailImg = 0; }
+
+  const imgs = gwImages(c);
+  const nav = imgs.length > 1 ? `
+    <div class="gw-img-nav">
+      <button class="gw-img-btn gw-img-prev" title="Previous illustration">◀</button>
+      <span class="gw-img-count">${gwDetailImg + 1}/${imgs.length}</span>
+      <button class="gw-img-btn gw-img-next" title="Next illustration">▶</button>
+    </div>` : '';
+
   gwDetailEl.style.display = '';
   gwDetailEl.innerHTML = `
     <button class="gw-detail-close" title="Close">✕</button>
-    ${gwThumb(c, 'gw-detail-thumb')}
+    <div class="gw-detail-art">
+      ${gwThumb(c, 'gw-detail-thumb', gwDetailImg)}
+      ${nav}
+    </div>
     <div class="gw-detail-body">
       <div class="gw-detail-name" style="color:${gwAccent(c.personaje)}">${escHtml(c.personaje)}</div>
       ${gwMetaRows(c)}
@@ -229,12 +294,24 @@ function gwShowDetail(id) {
 
   gwDetailEl.querySelector('.gw-detail-close').addEventListener('click', gwHideDetail);
   gwDetailEl.querySelector('.gw-guess-btn').addEventListener('click', () => gwGuess(c.id));
+
+  if (imgs.length > 1) {
+    const step = d => {
+      gwDetailImg = (gwDetailImg + d + imgs.length) % imgs.length;
+      gwShowDetail(id);
+    };
+    gwDetailEl.querySelector('.gw-img-prev').addEventListener('click', () => step(-1));
+    gwDetailEl.querySelector('.gw-img-next').addEventListener('click', () => step(1));
+  }
+
   if (gwDetailEl.scrollIntoView) gwDetailEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 function gwHideDetail() {
   gwDetailEl.style.display = 'none';
   gwDetailEl.innerHTML = '';
+  gwDetailId  = null;
+  gwDetailImg = 0;
 }
 
 function gwGuess(id) {
