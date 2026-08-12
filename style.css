@@ -2187,18 +2187,17 @@ mark.notes-mark {
 .gw-verdict-body strong { color: var(--cyan-light); }
 
 /* ── Masquerade responsive ──
-   En pantallas chicas los retratos de ~117px no se distinguen. Se les da un alto
-   mínimo de 1/3 de pantalla y se ensanchan las columnas en la misma proporción,
-   para que object-fit no recorte de más. El cap en px evita que en un celular
-   muy alto la carta ocupe media pantalla. */
+   En pantallas chicas los retratos de ~117px no se distinguen, así que se
+   ensanchan las columnas. El alto lo pone el aspect-ratio 3/4, con un tope de
+   1/3 de pantalla para que la lista de 43 no se vuelva interminable: al recortar
+   el alto object-fit recorta la ilustración, no la deforma. */
 @media (max-width: 760px) {
   .guesswho-panel { max-height: none; }
   .gw-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
-  .gw-card .gw-thumb { min-height: min(24vh, 220px); }
+  .gw-card .gw-thumb { max-height: 33vh; }
 }
 @media (max-width: 520px) {
   .gw-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-  .gw-card .gw-thumb { min-height: min(33vh, 300px); }
   .gw-card .gw-initial { font-size: 2.6rem; }
   .gw-card-name { font-size: .74rem; }
 }

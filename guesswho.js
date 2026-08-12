@@ -20,13 +20,22 @@ const GW_FIELD_LABELS = {
   faccion: 'Facción', jugador: 'Jugador', estado: 'Estado',
 };
 
-// Glifo de la insignia según el estado; vacío = vivo y activo, sin insignia
-function gwEstadoIcon(estado) {
+// Categorías de estado: la ficha muestra el texto tal cual ('Muerta eternamente'),
+// pero para preguntar se agrupan — Muerto / Muerta / Muerta eternamente son lo mismo.
+const GW_ESTADOS = [
+  { frag: 'muert',     cat: 'Muerto',       icon: '☠' },
+  { frag: 'desaparec', cat: 'Desaparecido', icon: '?' },
+  { frag: 'traidor',   cat: 'Traidor',      icon: '⚑' },
+];
+
+function gwEstadoInfo(estado) {
   const e = estado.toLowerCase();
-  if (e.includes('muert'))     return '☠';
-  if (e.includes('desaparec')) return '?';
-  if (e.includes('traidor'))   return '⚑';
-  return '✦';
+  return GW_ESTADOS.find(x => e.includes(x.frag)) || { cat: estado, icon: '✦' };
+}
+
+// Glifo de la insignia; vacío = vivo y activo, sin insignia
+function gwEstadoIcon(estado) {
+  return gwEstadoInfo(estado).icon;
 }
 
 // ── Datos ────────────────────────────────────
@@ -292,7 +301,9 @@ function gwToggleReveal() {
 
 function gwValuesFor(field) {
   if (field === 'clase') return gwClassValues();
-  return [...new Set(gwRoster.map(c => c[field]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  const raw = gwRoster.map(c => c[field]).filter(Boolean);
+  const vals = field === 'estado' ? raw.map(e => gwEstadoInfo(e).cat) : raw;
+  return [...new Set(vals)].sort((a, b) => a.localeCompare(b, 'es'));
 }
 
 // Clases base presentes + un token de rescate para quien no calce con ninguna
@@ -311,7 +322,8 @@ function gwClassValues() {
 }
 
 function gwMatches(c, field, value) {
-  if (field === 'clase') return c.clase.toLowerCase().includes(value.toLowerCase());
+  if (field === 'clase')  return c.clase.toLowerCase().includes(value.toLowerCase());
+  if (field === 'estado') return !!c.estado && gwEstadoInfo(c.estado).cat === value;
   return c[field] === value;
 }
 
