@@ -42,15 +42,17 @@ function setTheme(theme) {
 })();
 
 (function initPanelToggles() {
-  const KEYS = ['dice', 'terminal', 'wheel', 'party', 'combat', 'tarot', 'timer', 'prob', 'notes'];
+  const KEYS = ['dice', 'terminal', 'wheel', 'party', 'combat', 'tarot', 'timer', 'prob', 'notes', 'guesswho'];
+  // Paneles que arrancan ocultos hasta que el usuario los prenda a mano
+  const DEFAULT_OFF = new Set(['guesswho']);
   let state;
   try { state = JSON.parse(localStorage.getItem('arcane-panels')); } catch {}
-  if (!state) state = Object.fromEntries(KEYS.map(k => [k, true]));
+  if (!state) state = Object.fromEntries(KEYS.map(k => [k, !DEFAULT_OFF.has(k)]));
 
   function apply() {
     KEYS.forEach(key => {
       const sel = key === 'party' ? '.hp-panel' : key === 'tarot' ? '.tarot-panel' : key === 'combat' ? '.combat-panel' : `.${key}-panel`;
-      const visible = state[key] === undefined ? true : !!state[key];
+      const visible = state[key] === undefined ? !DEFAULT_OFF.has(key) : !!state[key];
       document.querySelector(sel).classList.toggle('panel-hidden', !visible);
       document.querySelector(`[data-panel="${key}"]`).classList.toggle('active', visible);
     });

@@ -39,6 +39,7 @@
       <button class="panel-toggle-btn" data-panel="timer">⏱ Timer</button>
       <button class="panel-toggle-btn" data-panel="prob">📊 Prob</button>
       <button class="panel-toggle-btn" data-panel="notes">📝 Notes</button>
+      <button class="panel-toggle-btn" data-panel="guesswho">🕵 Adivina Quién</button>
     </nav>
   </header>
 
@@ -132,6 +133,7 @@
         <span data-cmd="/wlist">/wlist</span>
         <span data-cmd="/npc">/npc</span>
         <span data-cmd="/clearnotes">/clearnotes</span>
+        <span data-cmd="/gw">/gw</span>
         <span data-cmd="/help">/help</span>
       </div>
     </section>
@@ -297,11 +299,48 @@
       </div>
     </section>
 
+    <!-- ── Adivina Quién ── -->
+    <section class="panel guesswho-panel">
+      <h2 class="panel-title">Adivina Quién</h2>
+
+      <div class="gw-toolbar">
+        <button id="gwNewBtn"    class="gw-action-btn gw-primary" title="Asignar un personaje secreto al azar">🎲 Nueva partida</button>
+        <button id="gwRevealBtn" class="gw-action-btn" title="Mostrar / ocultar tu personaje">👁 Ver mi personaje</button>
+        <button id="gwUndoBtn"   class="gw-action-btn" title="Deshacer el último descarte">↺ Deshacer</button>
+        <button id="gwResetBtn"  class="gw-action-btn" title="Devolver a todos al tablero">♻ Reiniciar</button>
+        <button id="gwImportBtn" class="gw-action-btn" title="Importar roster .json">📂 Importar</button>
+        <button id="gwExportBtn" class="gw-action-btn" title="Exportar roster .json">💾 Exportar</button>
+        <input type="file" id="gwFileIn" accept=".json,application/json" style="display:none" />
+      </div>
+
+      <div id="gwSecret" class="gw-secret" style="display:none"></div>
+
+      <div class="gw-ask-row">
+        <span class="gw-ask-label">Preguntar por</span>
+        <select id="gwAskField" class="gw-select">
+          <option value="raza">Raza</option>
+          <option value="subespecie">Sub-especie</option>
+          <option value="clase">Clase</option>
+          <option value="faccion">Facción</option>
+          <option value="estado">Estado</option>
+          <option value="jugador">Jugador</option>
+        </select>
+        <select id="gwAskValue" class="gw-select gw-select-wide"></select>
+        <button id="gwAskYes" class="gw-ask-btn gw-yes" title="Descarta a los que NO calzan">Sí</button>
+        <button id="gwAskNo"  class="gw-ask-btn gw-no"  title="Descarta a los que SÍ calzan">No</button>
+      </div>
+
+      <div id="gwStatus" class="gw-status"></div>
+      <div id="gwGrid" class="gw-grid"></div>
+      <div id="gwDetail" class="gw-detail" style="display:none"></div>
+    </section>
+
   </main>
 
   <script src="constants.js"></script>
   <script src="data.js"></script>
   <script src="spells.js"></script>
+  <script src="guesswho-data.js"></script>
   <script src="utils.js"></script>
   <script src="init.js"></script>
   <script src="dice.js"></script>
@@ -312,6 +351,7 @@
   <script src="timer.js"></script>
   <script src="prob.js"></script>
   <script src="notes.js"></script>
+  <script src="guesswho.js"></script>
   <script src="terminal.js"></script>
 </body>
 </html>
