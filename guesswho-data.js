@@ -502,12 +502,12 @@ const GUESS_WHO = [
 
   // ── Ally ──
   {
-    id: 'kaya',
+    id: 'kaida',
     jugador: 'Ally',
-    personaje: 'Kaya',
+    personaje: 'Kaida',
     raza: 'Dragonborn',
     subespecie: '',
-    clase: 'Rogue',
+    clase: 'Warlock',
     faccion: 'Ninguno',
     estado: '',
     descripcion: '',
