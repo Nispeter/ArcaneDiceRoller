@@ -500,6 +500,21 @@ const GUESS_WHO = [
     imagen: '',
   },
 
+  // ── Ally ──
+  {
+    id: 'kaya',
+    jugador: 'Ally',
+    personaje: 'Kaya',
+    raza: 'Dragonborn',
+    subespecie: '',
+    clase: 'Rogue',
+    faccion: 'Ninguno',
+    estado: '',
+    descripcion: '',
+    lore: '',
+    imagen: 'guess_who/thumbs/Kaya.webp',
+  },
+
   // ── Pelao ──
   {
     id: 'hrungnir',
@@ -509,7 +524,7 @@ const GUESS_WHO = [
     subespecie: '',
     clase: 'Way of the Open Hand Monk',
     faccion: 'Ninguno',
-    estado: 'Dead',
+    estado: '',
     descripcion: '',
     lore: '',
     imagen: 'guess_who/thumbs/Hrungnir.webp',
